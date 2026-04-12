@@ -1,29 +1,31 @@
 import Link from "next/link";
-import { Building2, LayoutDashboard, FileText, ReceiptText, Users2 } from "lucide-react";
+import { Building2, LayoutDashboard, FileText, ReceiptText, Users2, Wrench, CheckSquare } from "lucide-react";
 import { navigationItems } from "@/lib/navigation";
 
-const iconMap = {
+const iconMap: Record<string, any> = {
   dashboard: LayoutDashboard,
   clients: Users2,
+  services: Wrench,
   quotations: FileText,
-  invoices: ReceiptText
+  invoices: ReceiptText,
+  tasks: CheckSquare
 };
 
 export function SidebarNav() {
   return (
-    <aside className="hidden w-[280px] shrink-0 flex-col rounded-[32px] border border-white/70 bg-[#121212] p-6 text-white shadow-[0_24px_80px_rgba(16,16,16,0.16)] lg:flex">
+    <aside className="hidden w-[280px] shrink-0 flex-col rounded-[32px] border border-blue-100 bg-brand-950 p-6 text-white shadow-[0_24px_80px_rgba(16,16,16,0.16)] lg:flex">
       <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#c49b5a] text-[#121212]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-white">
             <Building2 className="h-5 w-5" />
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-white/45">Aurum</p>
-            <p className="text-lg font-semibold">Advisory Suite</p>
+            <p className="text-sm uppercase tracking-[0.28em] text-white/45">Kanzode</p>
+            <p className="text-lg font-semibold">and Co</p>
           </div>
         </div>
         <p className="mt-4 text-sm leading-6 text-white/60">
-          Premium demo cockpit for CA, CS, legal, and business advisory teams.
+          Practice management for CA, CS, legal, and business advisory firms.
         </p>
       </div>
 
@@ -43,13 +45,12 @@ export function SidebarNav() {
         })}
       </nav>
 
-      <div className="mt-auto rounded-[28px] border border-[#c49b5a]/20 bg-[#1d1d1d] p-5">
-        <p className="text-xs uppercase tracking-[0.24em] text-[#c49b5a]">
-          Demo Readiness
+      <div className="mt-auto rounded-[28px] border border-brand-500/20 bg-brand-900 p-5">
+        <p className="text-xs uppercase tracking-[0.24em] text-brand-400">
+          Portal Ready
         </p>
         <p className="mt-3 text-sm leading-6 text-white/65">
-          Structure is ready for AI generation, mailer hooks, WhatsApp delivery,
-          and a real database when you want to move beyond mock storage.
+          Automated document delivery, share links, and real-time task tracking built in.
         </p>
       </div>
     </aside>

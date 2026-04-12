@@ -13,17 +13,22 @@ export type QuotationStatus =
 
 export type InvoicePaymentStatus = "unpaid" | "paid" | "overdue";
 
+export type QuotationType = "direct_invoice" | "manual";
+
 export type ActivityType =
   | "generated"
   | "converted"
   | "sent_email"
   | "sent_whatsapp"
+  | "sent_portal"
   | "opened"
   | "approved"
   | "paid"
   | "overdue";
 
 export type InteractionChannel = "email" | "whatsapp" | "call" | "meeting";
+
+export type TaskStatus = "pending" | "in_progress" | "completed";
 
 export interface PricingPreferences {
   preferredBillingCycle?: "one_time" | "monthly" | "quarterly" | "annual";
@@ -57,11 +62,20 @@ export interface Client {
   updatedAt: string;
 }
 
+export interface Party {
+  id: string;
+  name: string;
+  address: string;
+  email: string;
+  phoneNumber: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ServiceCatalogItem {
   id: string;
   name: string;
   category: string;
-  description: string;
   unitPrice: number;
   billingModel: "one_time" | "monthly";
   defaultTaxPercent: number;
@@ -72,7 +86,6 @@ export interface QuotationLineItem {
   id: string;
   serviceCatalogItemId?: string;
   title: string;
-  description: string;
   quantity: number;
   unitPrice: number;
   amount: number;
@@ -92,7 +105,10 @@ export interface SuggestedPackage {
 export interface Quotation {
   id: string;
   quotationNumber: string;
+  challanNumber: string;
   clientId: string;
+  partyId?: string;
+  quotationType: QuotationType;
   sourceText: string;
   extractedIntent: string;
   lineItems: QuotationLineItem[];
@@ -112,8 +128,10 @@ export interface Quotation {
 
 export interface Invoice {
   id: string;
-  quotationId: string;
+  quotationId?: string;
+  challanNumber: string;
   clientId: string;
+  partyId?: string;
   invoiceNumber: string;
   issueDate: string;
   dueDate: string;
@@ -122,6 +140,7 @@ export interface Invoice {
   taxPercent: number;
   taxAmount: number;
   total: number;
+  paidAmount: number;
   paymentStatus: InvoicePaymentStatus;
   paidAt?: string;
 }
@@ -144,4 +163,13 @@ export interface ClientInteraction {
   createdAt: string;
   relatedQuotationId?: string;
   relatedInvoiceId?: string;
+}
+
+export interface Task {
+  id: string;
+  taskName: string;
+  assignedTo: string;
+  status: TaskStatus;
+  createdAt: string;
+  updatedAt: string;
 }

@@ -1,5 +1,6 @@
 import { MockQuotationDraft } from "@/lib/mock-quotation-generator";
 import { formatCurrency } from "@/lib/format";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 export function GeneratedQuotationPreview({
   draft
@@ -16,9 +17,16 @@ export function GeneratedQuotationPreview({
 
   return (
     <div className="border border-slate-200 bg-white p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <StatusBadge status={draft.quotationType} />
+        <span className="text-sm text-slate-500">
+          {draft.quotationType === "direct_invoice" ? "Will convert directly to invoice" : "Manual quotation for review"}
+        </span>
+      </div>
+
       <div className="overflow-hidden border border-slate-200">
-        <div className="grid grid-cols-[1.6fr_0.6fr_0.7fr_0.7fr] border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs uppercase tracking-[0.22em] text-slate-400">
-          <div>Service</div>
+        <div className="grid grid-cols-[1.6fr_0.6fr_0.7fr_0.7fr] border-b border-slate-200 bg-brand-50 px-4 py-3 text-xs uppercase tracking-[0.22em] text-brand-800">
+          <div>Item</div>
           <div className="text-right">Qty</div>
           <div className="text-right">Rate</div>
           <div className="text-right">Amount</div>
@@ -31,7 +39,6 @@ export function GeneratedQuotationPreview({
           >
             <div className="pr-4">
               <p className="font-medium text-slate-900">{item.title}</p>
-              <p className="mt-1 text-sm text-slate-600">{item.description}</p>
             </div>
             <div className="text-right text-sm text-slate-700">{item.quantity}</div>
             <div className="text-right text-sm text-slate-700">
@@ -46,17 +53,17 @@ export function GeneratedQuotationPreview({
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-3">
-          <div className="bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Validity</p>
+          <div className="bg-brand-50 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-brand-800">Validity</p>
             <p className="mt-2 font-semibold text-slate-900">{draft.validityLabel}</p>
           </div>
-          <div className="bg-slate-50 px-4 py-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-slate-400">Notes</p>
+          <div className="bg-brand-50 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.2em] text-brand-800">Notes</p>
             <p className="mt-2 text-sm leading-6 text-slate-600">{draft.notes}</p>
           </div>
         </div>
 
-        <div className="bg-slate-950 px-5 py-5 text-white">
+        <div className="bg-brand-900 px-5 py-5 text-white">
           <div className="flex items-center justify-between text-sm text-white/70">
             <span>Subtotal</span>
             <span>{formatCurrency(draft.subtotal)}</span>
@@ -78,7 +85,7 @@ export function GeneratedQuotationPreview({
           {draft.terms.map((term, index) => (
             <div
               key={`${term}-${index}`}
-              className="bg-slate-50 px-4 py-3 text-sm text-slate-600"
+              className="bg-brand-50 px-4 py-3 text-sm text-slate-600"
             >
               {term}
             </div>

@@ -9,10 +9,10 @@ interface ActionTriggerProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClassNames = {
-  primary: "bg-slate-950 text-white hover:bg-black",
+  primary: "bg-brand-600 text-white hover:bg-brand-700",
   secondary:
-    "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50",
-  ghost: "bg-transparent text-slate-700 hover:bg-slate-100"
+    "border border-blue-200 bg-white text-brand-900 hover:bg-brand-50",
+  ghost: "bg-transparent text-brand-700 hover:bg-brand-50"
 };
 
 export function ActionTrigger({

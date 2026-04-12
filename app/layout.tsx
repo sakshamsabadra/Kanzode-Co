@@ -6,9 +6,9 @@ import "@/app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Aurum Advisory OS",
+  title: "Kanzode and Co",
   description:
-    "Production-style demo for quotations, invoices, and client workflow automation."
+    "Practice management for CA, CS, legal, and business advisory firms."
 };
 
 export default function RootLayout({

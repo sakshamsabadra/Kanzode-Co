@@ -3,9 +3,11 @@ import {
   initialClientInteractions,
   initialClients,
   initialInvoices,
+  initialParties,
   initialQuotations,
   initialServiceCatalog,
-  initialSuggestedPackages
+  initialSuggestedPackages,
+  initialTasks
 } from "@/data/mock-data";
 import {
   ActivityLog,
@@ -13,14 +15,18 @@ import {
   ClientInteraction,
   Invoice,
   InvoicePaymentStatus,
+  Party,
   Quotation,
   QuotationStatus,
-  SuggestedPackage
+  QuotationType,
+  SuggestedPackage,
+  Task,
+  TaskStatus
 } from "@/types";
 
 type CreateQuotationInput = Omit<
   Quotation,
-  "id" | "quotationNumber" | "createdAt" | "sentAt" | "openedAt" | "approvedAt"
+  "id" | "quotationNumber" | "challanNumber" | "createdAt" | "sentAt" | "openedAt" | "approvedAt"
 >;
 
 type MockStore = {
@@ -31,6 +37,8 @@ type MockStore = {
   activityLogs: ActivityLog[];
   clientInteractions: ClientInteraction[];
   suggestedPackages: SuggestedPackage[];
+  parties: Party[];
+  tasks: Task[];
 };
 
 const globalWithStore = global as typeof global & { __mock_store: MockStore };
@@ -43,7 +51,9 @@ if (!globalWithStore.__mock_store) {
     invoices: [...initialInvoices],
     activityLogs: [...initialActivityLogs],
     clientInteractions: [...initialClientInteractions],
-    suggestedPackages: [...initialSuggestedPackages]
+    suggestedPackages: [...initialSuggestedPackages],
+    parties: [...initialParties],
+    tasks: [...initialTasks]
   };
 }
 
@@ -57,8 +67,22 @@ function nextQuotationNumber() {
   return `QT-2026-${String(store.quotations.length + 1001)}`;
 }
 
+function nextChallanNumber() {
+  return `CH-2026-${String(store.quotations.length + store.invoices.length + 1001)}`;
+}
+
 function nextInvoiceNumber() {
   return `INV-2026-${String(store.invoices.length + 1001)}`;
+}
+
+function get10thOfNextMonth(date: Date): string {
+  const d = new Date(date);
+  if (d.getDate() >= 10) {
+    d.setMonth(d.getMonth() + 1);
+  }
+  d.setDate(10);
+  d.setHours(18, 0, 0, 0);
+  return d.toISOString();
 }
 
 function appendActivity(
@@ -95,6 +119,10 @@ export function getInvoices() {
   return store.invoices;
 }
 
+export function getInvoiceById(invoiceId: string) {
+  return store.invoices.find((invoice) => invoice.id === invoiceId);
+}
+
 export function getQuotations() {
   return store.quotations;
 }
@@ -111,11 +139,111 @@ export function getActivityLogs() {
   return store.activityLogs;
 }
 
+export function getParties() {
+  return store.parties;
+}
+
+export function getPartyById(partyId: string) {
+  return store.parties.find((party) => party.id === partyId);
+}
+
+export function getTasks() {
+  return store.tasks;
+}
+
+export function createParty(input: Omit<Party, "id" | "createdAt" | "updatedAt">) {
+  const party: Party = {
+    ...input,
+    id: nextId("pty", store.parties.length),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  store.parties.unshift(party);
+  return party;
+}
+
+export function updateParty(partyId: string, input: Partial<Omit<Party, "id" | "createdAt" | "updatedAt">>) {
+  const party = store.parties.find((p) => p.id === partyId);
+  if (!party) throw new Error("Party not found");
+  Object.assign(party, input, { updatedAt: new Date().toISOString() });
+  return party;
+}
+
+export function deleteParty(partyId: string) {
+  store.parties = store.parties.filter((p) => p.id !== partyId);
+}
+
+export function createTask(input: Omit<Task, "id" | "createdAt" | "updatedAt">) {
+  const task: Task = {
+    ...input,
+    id: nextId("task", store.tasks.length),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  store.tasks.unshift(task);
+  return task;
+}
+
+export function updateTask(taskId: string, input: Partial<Omit<Task, "id" | "createdAt" | "updatedAt">>) {
+  const task = store.tasks.find((t) => t.id === taskId);
+  if (!task) throw new Error("Task not found");
+  Object.assign(task, input, { updatedAt: new Date().toISOString() });
+  return task;
+}
+
+export function deleteTask(taskId: string) {
+  store.tasks = store.tasks.filter((t) => t.id !== taskId);
+}
+
+export function addServiceCatalogItem(input: Omit<typeof initialServiceCatalog[0], "id">) {
+  const item = {
+    ...input,
+    id: nextId("svc", store.serviceCatalog.length)
+  };
+  store.serviceCatalog.push(item);
+  return item;
+}
+
+export function updateServiceCatalogItem(itemId: string, input: Partial<Omit<typeof initialServiceCatalog[0], "id">>) {
+  const item = store.serviceCatalog.find((s) => s.id === itemId);
+  if (!item) throw new Error("Service item not found");
+  Object.assign(item, input);
+  return item;
+}
+
+export function deleteServiceCatalogItem(itemId: string) {
+  store.serviceCatalog = store.serviceCatalog.filter((s) => s.id !== itemId);
+}
+
+export function moveServiceCatalogItem(itemId: string, direction: "up" | "down") {
+  const idx = store.serviceCatalog.findIndex((s) => s.id === itemId);
+  if (idx === -1) return;
+  const targetIdx = direction === "up" ? idx - 1 : idx + 1;
+  if (targetIdx < 0 || targetIdx >= store.serviceCatalog.length) return;
+  const temp = store.serviceCatalog[idx];
+  store.serviceCatalog[idx] = store.serviceCatalog[targetIdx];
+  store.serviceCatalog[targetIdx] = temp;
+}
+
+export function copyServiceCatalogItem(itemId: string) {
+  const item = store.serviceCatalog.find((s) => s.id === itemId);
+  if (!item) return;
+  const copy = {
+    ...item,
+    id: nextId("svc", store.serviceCatalog.length),
+    name: `${item.name} (Copy)`
+  };
+  const idx = store.serviceCatalog.findIndex((s) => s.id === itemId);
+  store.serviceCatalog.splice(idx + 1, 0, copy);
+  return copy;
+}
+
 export function createQuotation(input: CreateQuotationInput) {
   const quotation: Quotation = {
     ...input,
     id: nextId("qt", store.quotations.length),
     quotationNumber: nextQuotationNumber(),
+    challanNumber: nextChallanNumber(),
     createdAt: new Date().toISOString()
   };
 
@@ -130,6 +258,16 @@ export function createQuotation(input: CreateQuotationInput) {
   return quotation;
 }
 
+export function updateQuotationLineItems(quotationId: string, lineItems: Quotation["lineItems"]) {
+  const quotation = getQuotationById(quotationId);
+  if (!quotation) throw new Error("Quotation not found");
+  quotation.lineItems = lineItems;
+  quotation.subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+  quotation.taxAmount = Math.round((quotation.subtotal * quotation.taxPercent) / 100);
+  quotation.total = quotation.subtotal + quotation.taxAmount;
+  return quotation;
+}
+
 export function createInvoiceFromQuotation(quotationId: string) {
   const quotation = getQuotationById(quotationId);
 
@@ -137,18 +275,22 @@ export function createInvoiceFromQuotation(quotationId: string) {
     throw new Error("Quotation not found");
   }
 
+  const issueDate = new Date();
   const invoice: Invoice = {
     id: nextId("inv", store.invoices.length),
     quotationId: quotation.id,
+    challanNumber: quotation.challanNumber,
     clientId: quotation.clientId,
+    partyId: quotation.partyId,
     invoiceNumber: nextInvoiceNumber(),
-    issueDate: new Date().toISOString(),
-    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    issueDate: issueDate.toISOString(),
+    dueDate: get10thOfNextMonth(issueDate),
     lineItems: quotation.lineItems,
     subtotal: quotation.subtotal,
     taxPercent: quotation.taxPercent,
     taxAmount: quotation.taxAmount,
     total: quotation.total,
+    paidAmount: 0,
     paymentStatus: "unpaid"
   };
 
@@ -160,6 +302,38 @@ export function createInvoiceFromQuotation(quotationId: string) {
     "converted",
     `${invoice.invoiceNumber} created from ${quotation.quotationNumber}.`
   );
+  return invoice;
+}
+
+export function createInvoiceManual(input: Omit<Invoice, "id" | "invoiceNumber" | "challanNumber" | "dueDate" | "createdAt">) {
+  const issueDate = new Date(input.issueDate);
+  const invoice: Invoice = {
+    ...input,
+    id: nextId("inv", store.invoices.length),
+    invoiceNumber: nextInvoiceNumber(),
+    challanNumber: nextChallanNumber(),
+    dueDate: get10thOfNextMonth(issueDate),
+    paidAmount: input.paidAmount ?? 0
+  };
+
+  store.invoices.unshift(invoice);
+  appendActivity(
+    invoice.clientId,
+    "invoice",
+    invoice.id,
+    "converted",
+    `${invoice.invoiceNumber} created manually.`
+  );
+  return invoice;
+}
+
+export function updateInvoiceLineItems(invoiceId: string, lineItems: Invoice["lineItems"]) {
+  const invoice = store.invoices.find((i) => i.id === invoiceId);
+  if (!invoice) throw new Error("Invoice not found");
+  invoice.lineItems = lineItems;
+  invoice.subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
+  invoice.taxAmount = Math.round((invoice.subtotal * invoice.taxPercent) / 100);
+  invoice.total = invoice.subtotal + invoice.taxAmount;
   return invoice;
 }
 
@@ -182,7 +356,7 @@ export function updateQuotationStatus(
   const actionMap: Record<QuotationStatus, ActivityLog["action"]> = {
     draft: "generated",
     generated: "generated",
-    sent: "sent_email",
+    sent: "sent_portal",
     opened: "opened",
     approved: "approved"
   };
@@ -210,6 +384,7 @@ export function updateInvoiceStatus(
 
   invoice.paymentStatus = paymentStatus;
   invoice.paidAt = paymentStatus === "paid" ? new Date().toISOString() : undefined;
+  if (paymentStatus === "paid") invoice.paidAmount = invoice.total;
 
   const actionMap: Record<InvoicePaymentStatus, ActivityLog["action"]> = {
     unpaid: "converted",

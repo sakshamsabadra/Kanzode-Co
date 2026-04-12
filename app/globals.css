@@ -4,6 +4,8 @@
 
 :root {
   color-scheme: light;
+  --brand-primary: #2563eb;
+  --brand-dark: #1e3a5f;
 }
 
 html {
@@ -12,7 +14,7 @@ html {
 
 body {
   min-height: 100vh;
-  color: #111111;
+  color: #1e3a5f;
 }
 
 * {
@@ -21,11 +23,29 @@ body {
 }
 
 *::selection {
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(37, 99, 235, 0.15);
 }
 
 button,
 select,
 textarea {
   font: inherit;
+}
+
+@media print {
+  body {
+    background: white !important;
+    color: #000 !important;
+    font-size: 12pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-document {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
 }

@@ -3,10 +3,12 @@ import {
   Client,
   ClientInteraction,
   Invoice,
+  Party,
   Quotation,
   QuotationLineItem,
   ServiceCatalogItem,
-  SuggestedPackage
+  SuggestedPackage,
+  Task
 } from "@/types";
 
 const quotationLineItemsA: QuotationLineItem[] = [
@@ -14,7 +16,6 @@ const quotationLineItemsA: QuotationLineItem[] = [
     id: "qli-1001",
     serviceCatalogItemId: "svc-roc",
     title: "ROC compliance management",
-    description: "Board minutes, annual filing planning, and secretarial calendar.",
     quantity: 1,
     unitPrice: 18000,
     amount: 18000
@@ -23,7 +24,6 @@ const quotationLineItemsA: QuotationLineItem[] = [
     id: "qli-1002",
     serviceCatalogItemId: "svc-gst",
     title: "GST and TDS compliance retainer",
-    description: "Monthly filings, reconciliations, and notice support.",
     quantity: 1,
     unitPrice: 24000,
     amount: 24000
@@ -32,7 +32,6 @@ const quotationLineItemsA: QuotationLineItem[] = [
     id: "qli-1003",
     serviceCatalogItemId: "svc-contract",
     title: "Commercial contract review",
-    description: "Urgent review of one vendor agreement with risk comments.",
     quantity: 1,
     unitPrice: 12000,
     amount: 12000
@@ -44,7 +43,6 @@ const quotationLineItemsB: QuotationLineItem[] = [
     id: "qli-1004",
     serviceCatalogItemId: "svc-startup",
     title: "Startup structuring package",
-    description: "Entity cleanup, founder documentation, and compliance baseline.",
     quantity: 1,
     unitPrice: 32000,
     amount: 32000
@@ -53,7 +51,6 @@ const quotationLineItemsB: QuotationLineItem[] = [
     id: "qli-1005",
     serviceCatalogItemId: "svc-contract",
     title: "Founder agreement review",
-    description: "Commercial and governance review with execution notes.",
     quantity: 1,
     unitPrice: 12000,
     amount: 12000
@@ -65,7 +62,6 @@ const quotationLineItemsC: QuotationLineItem[] = [
     id: "qli-1006",
     serviceCatalogItemId: "svc-contract",
     title: "Commercial review desk",
-    description: "Recurring review support for customer and vendor contracts.",
     quantity: 1,
     unitPrice: 12000,
     amount: 12000
@@ -74,7 +70,6 @@ const quotationLineItemsC: QuotationLineItem[] = [
     id: "qli-1007",
     serviceCatalogItemId: "svc-cfo",
     title: "Virtual CFO desk",
-    description: "MIS reviews, pricing support, and decision advisory inputs.",
     quantity: 1,
     unitPrice: 85000,
     amount: 85000
@@ -86,7 +81,6 @@ export const initialServiceCatalog: ServiceCatalogItem[] = [
     id: "svc-roc",
     name: "ROC compliance management",
     category: "Company Secretarial",
-    description: "Board minutes, annual filing prep, and compliance tracking.",
     unitPrice: 18000,
     billingModel: "monthly",
     defaultTaxPercent: 18,
@@ -96,7 +90,6 @@ export const initialServiceCatalog: ServiceCatalogItem[] = [
     id: "svc-gst",
     name: "GST and TDS compliance retainer",
     category: "Taxation",
-    description: "Monthly GST, TDS, reconciliations, and notice support.",
     unitPrice: 24000,
     billingModel: "monthly",
     defaultTaxPercent: 18,
@@ -106,7 +99,6 @@ export const initialServiceCatalog: ServiceCatalogItem[] = [
     id: "svc-contract",
     name: "Commercial contract review",
     category: "Legal",
-    description: "Review of vendor, customer, and business agreements.",
     unitPrice: 12000,
     billingModel: "one_time",
     defaultTaxPercent: 18,
@@ -116,7 +108,6 @@ export const initialServiceCatalog: ServiceCatalogItem[] = [
     id: "svc-cfo",
     name: "Virtual CFO desk",
     category: "Business Advisory",
-    description: "MIS, budget review, pricing strategy, and finance oversight.",
     unitPrice: 85000,
     billingModel: "monthly",
     defaultTaxPercent: 18,
@@ -126,7 +117,6 @@ export const initialServiceCatalog: ServiceCatalogItem[] = [
     id: "svc-startup",
     name: "Startup structuring package",
     category: "Business Setup",
-    description: "Incorporation cleanup, founder documentation, and setup support.",
     unitPrice: 32000,
     billingModel: "one_time",
     defaultTaxPercent: 18,
@@ -261,6 +251,36 @@ export const initialClients: Client[] = [
   }
 ];
 
+export const initialParties: Party[] = [
+  {
+    id: "pty-1001",
+    name: "Vikram Mehta",
+    address: "12 MG Road, Pune, Maharashtra 411001",
+    email: "vikram@mehtaindustries.example",
+    phoneNumber: "+91 98223 44556",
+    createdAt: "2026-01-15T09:00:00.000Z",
+    updatedAt: "2026-03-20T11:00:00.000Z"
+  },
+  {
+    id: "pty-1002",
+    name: "Priya Sharma",
+    address: "45 Civil Lines, Nagpur, Maharashtra 440001",
+    email: "priya@sharmaassociates.example",
+    phoneNumber: "+91 98765 11223",
+    createdAt: "2026-02-10T09:00:00.000Z",
+    updatedAt: "2026-04-01T14:30:00.000Z"
+  },
+  {
+    id: "pty-1003",
+    name: "Arjun Reddy",
+    address: "78 Jubilee Hills, Hyderabad, Telangana 500033",
+    email: "arjun@reddyholdings.example",
+    phoneNumber: "+91 99887 76655",
+    createdAt: "2026-03-05T09:00:00.000Z",
+    updatedAt: "2026-04-02T10:00:00.000Z"
+  }
+];
+
 export const initialSuggestedPackages: SuggestedPackage[] = [
   {
     id: "pkg-1001",
@@ -307,7 +327,10 @@ export const initialQuotations: Quotation[] = [
   {
     id: "qt-1001",
     quotationNumber: "QT-2026-1001",
+    challanNumber: "CH-2026-1001",
     clientId: "cl-1001",
+    partyId: "pty-1001",
+    quotationType: "manual",
     sourceText:
       "Need GST, payroll, ROC filings, and one urgent vendor agreement review. Please send on email and WhatsApp.",
     extractedIntent: "Monthly compliance retainer with one urgent legal review.",
@@ -331,7 +354,9 @@ export const initialQuotations: Quotation[] = [
   {
     id: "qt-1002",
     quotationNumber: "QT-2026-1002",
+    challanNumber: "CH-2026-1002",
     clientId: "cl-1002",
+    quotationType: "direct_invoice",
     sourceText:
       "We need incorporation cleanup, founder agreement review, and startup compliance baseline support.",
     extractedIntent: "Founder documentation and structuring support package.",
@@ -355,7 +380,10 @@ export const initialQuotations: Quotation[] = [
   {
     id: "qt-1003",
     quotationNumber: "QT-2026-1003",
+    challanNumber: "CH-2026-1003",
     clientId: "cl-1003",
+    partyId: "pty-1002",
+    quotationType: "manual",
     sourceText:
       "Need outsourced commercial reviews and periodic finance strategy inputs for client transactions.",
     extractedIntent: "Recurring advisory desk combining contract review and CFO support.",
@@ -379,7 +407,9 @@ export const initialInvoices: Invoice[] = [
   {
     id: "inv-1001",
     quotationId: "qt-1001",
+    challanNumber: "CH-2026-1001",
     clientId: "cl-1001",
+    partyId: "pty-1001",
     invoiceNumber: "INV-2026-1001",
     issueDate: "2026-04-03T09:00:00.000Z",
     dueDate: "2026-04-10T18:00:00.000Z",
@@ -388,36 +418,39 @@ export const initialInvoices: Invoice[] = [
     taxPercent: 18,
     taxAmount: 9720,
     total: 63720,
+    paidAmount: 63720,
     paymentStatus: "paid",
     paidAt: "2026-04-03T17:20:00.000Z"
   },
   {
     id: "inv-1002",
     quotationId: "qt-1002",
+    challanNumber: "CH-2026-1002",
     clientId: "cl-1002",
     invoiceNumber: "INV-2026-1002",
     issueDate: "2026-04-02T14:10:00.000Z",
-    dueDate: "2026-04-08T18:00:00.000Z",
+    dueDate: "2026-04-10T18:00:00.000Z",
     lineItems: quotationLineItemsB,
     subtotal: 44000,
     taxPercent: 18,
     taxAmount: 7920,
     total: 51920,
+    paidAmount: 0,
     paymentStatus: "unpaid"
   },
   {
     id: "inv-1003",
-    quotationId: "qt-9999",
+    challanNumber: "CH-2026-1003",
     clientId: "cl-1004",
+    partyId: "pty-1003",
     invoiceNumber: "INV-2026-1003",
     issueDate: "2026-03-25T10:00:00.000Z",
-    dueDate: "2026-03-31T18:00:00.000Z",
+    dueDate: "2026-04-10T18:00:00.000Z",
     lineItems: [
       {
         id: "qli-1008",
         serviceCatalogItemId: "svc-cfo",
         title: "Virtual CFO desk",
-        description: "Monthly MIS, pricing support, and review calls.",
         quantity: 1,
         unitPrice: 85000,
         amount: 85000
@@ -427,7 +460,43 @@ export const initialInvoices: Invoice[] = [
     taxPercent: 18,
     taxAmount: 15300,
     total: 100300,
+    paidAmount: 0,
     paymentStatus: "overdue"
+  }
+];
+
+export const initialTasks: Task[] = [
+  {
+    id: "task-1001",
+    taskName: "File GST returns for Northstar Foods",
+    assignedTo: "Rahul K",
+    status: "in_progress",
+    createdAt: "2026-04-01T09:00:00.000Z",
+    updatedAt: "2026-04-03T10:00:00.000Z"
+  },
+  {
+    id: "task-1002",
+    taskName: "Prepare board minutes for Rivermark Health",
+    assignedTo: "Sneha P",
+    status: "pending",
+    createdAt: "2026-04-02T11:00:00.000Z",
+    updatedAt: "2026-04-02T11:00:00.000Z"
+  },
+  {
+    id: "task-1003",
+    taskName: "Review founder agreement draft",
+    assignedTo: "Amit S",
+    status: "completed",
+    createdAt: "2026-03-28T14:00:00.000Z",
+    updatedAt: "2026-04-01T16:30:00.000Z"
+  },
+  {
+    id: "task-1004",
+    taskName: "Follow up on overdue invoice INV-2026-1003",
+    assignedTo: "Rahul K",
+    status: "pending",
+    createdAt: "2026-04-03T09:00:00.000Z",
+    updatedAt: "2026-04-03T09:00:00.000Z"
   }
 ];
 
@@ -438,7 +507,7 @@ export const initialActivityLogs: ActivityLog[] = [
     entityType: "quotation",
     entityId: "qt-1001",
     action: "opened",
-    message: "Northstar Foods opened the quotation from the email link.",
+    message: "Northstar Foods opened the quotation from the portal link.",
     createdAt: "2026-04-03T10:15:00.000Z"
   },
   {
@@ -464,8 +533,8 @@ export const initialActivityLogs: ActivityLog[] = [
     clientId: "cl-1001",
     entityType: "quotation",
     entityId: "qt-1001",
-    action: "sent_whatsapp",
-    message: "Quotation link sent successfully through WhatsApp template message.",
+    action: "sent_portal",
+    message: "Quotation delivered through portal automatically.",
     createdAt: "2026-04-02T10:05:00.000Z"
   },
   {

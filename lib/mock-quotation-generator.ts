@@ -2,6 +2,7 @@ import {
   Client,
   ClientType,
   QuotationLineItem,
+  QuotationType,
   ServiceCatalogItem,
   SuggestedPackage
 } from "@/types";
@@ -11,6 +12,7 @@ interface GenerateMockQuotationDraftArgs {
   sourceText: string;
   serviceCatalog: ServiceCatalogItem[];
   suggestedPackages: SuggestedPackage[];
+  quotationType?: QuotationType;
 }
 
 interface ExtractedServicePreview {
@@ -23,6 +25,7 @@ export interface MockQuotationDraft {
   extractedServices: ExtractedServicePreview[];
   urgency: "Standard" | "Urgent";
   clientType: ClientType;
+  quotationType: QuotationType;
   suggestedTerms: string[];
   pricingHints: string[];
   lineItems: QuotationLineItem[];
@@ -59,7 +62,8 @@ export function generateMockQuotationDraft({
   client,
   sourceText,
   serviceCatalog,
-  suggestedPackages
+  suggestedPackages,
+  quotationType = "manual"
 }: GenerateMockQuotationDraftArgs): MockQuotationDraft {
   const normalized = sourceText.toLowerCase();
   const urgency =
@@ -85,7 +89,6 @@ export function generateMockQuotationDraft({
         service.id === "svc-contract" && normalized.includes("founders")
           ? "Founders agreement draft"
           : service.name,
-      description: service.description,
       quantity: 1,
       unitPrice: boostedUnitPrice,
       amount: boostedUnitPrice
@@ -121,6 +124,7 @@ export function generateMockQuotationDraft({
     })),
     urgency,
     clientType: client.clientType,
+    quotationType,
     suggestedTerms,
     pricingHints,
     lineItems,
