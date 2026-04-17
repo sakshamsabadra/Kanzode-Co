@@ -5,7 +5,19 @@ if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const MONGODB_URI = "mongodb+srv://shivansh1411_db_user:YTrOLudavcRLe7aX@cluster0.opumseu.mongodb.net/kanzode?appName=Cluster0";
+// Force using Google/Cloudflare DNS to resolve MongoDB SRV records
+// This bypasses local ISP/DNS blocks that cause ECONNREFUSED
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+} catch (e) {
+  console.warn("Could not set custom DNS servers:", e);
+}
+
+const MONGODB_URI = process.env.MONGODB_URI!;
+
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
+}
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
