@@ -1,7 +1,7 @@
 "use server";
 
 import * as dataService from "@/lib/data-service";
-import { MockQuotationDraft } from "@/lib/mock-quotation-generator";
+import { MockQuotationDraft } from "@/lib/quotation-generator";
 import { revalidatePath } from "next/cache";
 
 export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: string, sourceText: string, partyId?: string) {
@@ -84,4 +84,26 @@ export async function markInvoicePaidAction(id: string) {
   await dataService.updateInvoiceStatus(id, "paid");
   revalidatePath(`/invoices/${id}`);
   revalidatePath("/dashboard");
+}
+
+export async function createClientAction(data: any) {
+  await dataService.createClient(data);
+  revalidatePath("/clients");
+  revalidatePath("/dashboard");
+}
+
+export async function updateClientAction(id: string, data: any) {
+  await dataService.updateClient(id, data);
+  revalidatePath("/clients");
+}
+
+export async function deleteClientAction(id: string) {
+  await dataService.deleteClient(id);
+  revalidatePath("/clients");
+  revalidatePath("/dashboard");
+}
+
+export async function updatePartyAction(id: string, data: any) {
+  await dataService.updateParty(id, data);
+  revalidatePath("/clients");
 }

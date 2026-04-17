@@ -1,4 +1,4 @@
-import { MockQuotationDraft } from "@/lib/mock-quotation-generator";
+import { MockQuotationDraft } from "@/lib/quotation-generator";
 import { formatCurrency } from "@/lib/format";
 import { StatusBadge } from "@/components/ui/status-badge";
 

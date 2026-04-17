@@ -7,16 +7,13 @@ import ServiceCatalogItem from "../models/ServiceCatalogItem";
 import Task from "../models/Task";
 import ActivityLog from "../models/ActivityLog";
 import SuggestedPackage from "../models/SuggestedPackage";
-import * as mock from "./mock-storage";
+import ClientInteraction from "../models/ClientInteraction";
 import {
   ActivityType,
   InvoicePaymentStatus,
   QuotationStatus,
-  QuotationType,
   TaskStatus
 } from "@/types";
-
-const useMock = process.env.USE_MOCK_DATA === "true";
 
 // Helper for activity logs
 async function appendActivity(
@@ -35,36 +32,46 @@ async function appendActivity(
   });
 }
 
-// Clients
+// ── Clients ──────────────────────────────────────────────────────────
 export async function getClients() {
-  if (useMock) return mock.getClients();
   await dbConnect();
   return Client.find({}).sort({ createdAt: -1 }).lean();
 }
 
 export async function getClientById(clientId: string) {
-  if (useMock) return mock.getClientById(clientId);
   await dbConnect();
   return Client.findById(clientId).lean();
 }
 
-// Quotations
+export async function createClient(data: any) {
+  await dbConnect();
+  return Client.create(data);
+}
+
+export async function updateClient(clientId: string, data: any) {
+  await dbConnect();
+  return Client.findByIdAndUpdate(clientId, data, { new: true }).lean();
+}
+
+export async function deleteClient(clientId: string) {
+  await dbConnect();
+  return Client.findByIdAndDelete(clientId);
+}
+
+// ── Quotations ───────────────────────────────────────────────────────
 export async function getQuotations() {
-  if (useMock) return mock.getQuotations();
   await dbConnect();
   return Quotation.find({}).sort({ createdAt: -1 }).lean();
 }
 
 export async function getQuotationById(quotationId: string) {
-  if (useMock) return mock.getQuotationById(quotationId);
   await dbConnect();
   return Quotation.findById(quotationId).lean();
 }
 
 export async function createQuotation(data: any) {
-  if (useMock) return mock.createQuotation(data);
   await dbConnect();
-  
+
   // Generate numbers
   const count = await Quotation.countDocuments();
   const qNumber = `QT-2026-${String(count + 1001)}`;
@@ -88,7 +95,6 @@ export async function createQuotation(data: any) {
 }
 
 export async function updateQuotationStatus(quotationId: string, status: QuotationStatus) {
-  if (useMock) return mock.updateQuotationStatus(quotationId, status);
   await dbConnect();
   const quotation = await Quotation.findById(quotationId);
   if (!quotation) throw new Error("Quotation not found");
@@ -119,28 +125,39 @@ export async function updateQuotationStatus(quotationId: string, status: Quotati
   return quotation;
 }
 
-// Invoices
+export async function updateQuotationLineItems(quotationId: string, lineItems: any[]) {
+  await dbConnect();
+  const quotation = await Quotation.findById(quotationId);
+  if (!quotation) throw new Error("Quotation not found");
+
+  quotation.lineItems = lineItems;
+  quotation.subtotal = lineItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+  quotation.taxAmount = Math.round((quotation.subtotal * quotation.taxPercent) / 100);
+  quotation.total = quotation.subtotal + quotation.taxAmount;
+
+  await quotation.save();
+  return quotation;
+}
+
+// ── Invoices ──────────────────────────────────────────────────────────
 export async function getInvoices() {
-  if (useMock) return mock.getInvoices();
   await dbConnect();
   return Invoice.find({}).sort({ createdAt: -1 }).lean();
 }
 
 export async function getInvoiceById(invoiceId: string) {
-  if (useMock) return mock.getInvoiceById(invoiceId);
   await dbConnect();
   return Invoice.findById(invoiceId).lean();
 }
 
 export async function createInvoiceFromQuotation(quotationId: string) {
-  if (useMock) return mock.createInvoiceFromQuotation(quotationId);
   await dbConnect();
   const quotation = await Quotation.findById(quotationId);
   if (!quotation) throw new Error("Quotation not found");
 
   const count = await Invoice.countDocuments();
   const iNumber = `INV-2026-${String(count + 1001)}`;
-  
+
   const issueDate = new Date();
   const dueDate = new Date(issueDate);
   dueDate.setMonth(dueDate.getMonth() + 1);
@@ -174,8 +191,39 @@ export async function createInvoiceFromQuotation(quotationId: string) {
   return invoice;
 }
 
+export async function createInvoiceManual(data: any) {
+  await dbConnect();
+  const count = await Invoice.countDocuments();
+  const iNumber = `INV-2026-${String(count + 1001)}`;
+  const challanCount = await Quotation.countDocuments();
+  const challanNumber = `CH-2026-${String(challanCount + count + 1001)}`;
+
+  const issueDate = new Date(data.issueDate);
+  const dueDate = new Date(issueDate);
+  dueDate.setMonth(dueDate.getMonth() + 1);
+  dueDate.setDate(10);
+
+  const invoice = await Invoice.create({
+    ...data,
+    invoiceNumber: iNumber,
+    challanNumber,
+    issueDate,
+    dueDate,
+    paidAmount: data.paidAmount ?? 0
+  });
+
+  await appendActivity(
+    invoice.clientId.toString(),
+    "invoice",
+    invoice._id.toString(),
+    "converted",
+    `${invoice.invoiceNumber} created manually.`
+  );
+
+  return invoice;
+}
+
 export async function updateInvoiceStatus(invoiceId: string, paymentStatus: InvoicePaymentStatus) {
-  if (useMock) return mock.updateInvoiceStatus(invoiceId, paymentStatus);
   await dbConnect();
   const invoice = await Invoice.findById(invoiceId);
   if (!invoice) throw new Error("Invoice not found");
@@ -205,118 +253,126 @@ export async function updateInvoiceStatus(invoiceId: string, paymentStatus: Invo
   return invoice;
 }
 
-// Parties
+export async function updateInvoiceLineItems(invoiceId: string, lineItems: any[]) {
+  await dbConnect();
+  const invoice = await Invoice.findById(invoiceId);
+  if (!invoice) throw new Error("Invoice not found");
+
+  invoice.lineItems = lineItems;
+  invoice.subtotal = lineItems.reduce((sum: number, item: any) => sum + item.amount, 0);
+  invoice.taxAmount = Math.round((invoice.subtotal * invoice.taxPercent) / 100);
+  invoice.total = invoice.subtotal + invoice.taxAmount;
+
+  await invoice.save();
+  return invoice;
+}
+
+// ── Parties ───────────────────────────────────────────────────────────
 export async function getParties() {
-  if (useMock) return mock.getParties();
   await dbConnect();
   return Party.find({}).sort({ createdAt: -1 }).lean();
 }
 
 export async function getPartyById(partyId: string) {
-  if (useMock) return mock.getPartyById(partyId);
   await dbConnect();
   return Party.findById(partyId).lean();
 }
 
 export async function createParty(data: any) {
-  if (useMock) return mock.createParty(data);
   await dbConnect();
   return Party.create(data);
 }
 
+export async function updateParty(partyId: string, data: any) {
+  await dbConnect();
+  return Party.findByIdAndUpdate(partyId, data, { new: true }).lean();
+}
+
 export async function deleteParty(partyId: string) {
-  if (useMock) {
-    mock.deleteParty(partyId);
-    return true;
-  }
   await dbConnect();
   return Party.findByIdAndDelete(partyId);
 }
 
-// Tasks
+// ── Tasks ─────────────────────────────────────────────────────────────
 export async function getTasks() {
-  if (useMock) return mock.getTasks();
   await dbConnect();
   return Task.find({}).sort({ createdAt: -1 }).lean();
 }
 
 export async function createTask(data: any) {
-  if (useMock) return mock.createTask(data);
   await dbConnect();
   return Task.create(data);
 }
 
 export async function updateTask(taskId: string, data: any) {
-  if (useMock) return mock.updateTask(taskId, data);
   await dbConnect();
   return Task.findByIdAndUpdate(taskId, data, { new: true });
 }
 
 export async function deleteTask(taskId: string) {
-  if (useMock) {
-    mock.deleteTask(taskId);
-    return true;
-  }
   await dbConnect();
   return Task.findByIdAndDelete(taskId);
 }
 
-// Service Catalog
+// ── Service Catalog ────────────────────────────────────────────────────
 export async function getServiceCatalog() {
-  if (useMock) return mock.getServiceCatalog();
   await dbConnect();
   return ServiceCatalogItem.find({}).lean();
 }
 
 export async function addServiceCatalogItem(data: any) {
-  if (useMock) return mock.addServiceCatalogItem(data);
   await dbConnect();
   return ServiceCatalogItem.create(data);
 }
 
 export async function updateServiceCatalogItem(itemId: string, data: any) {
-  if (useMock) return mock.updateServiceCatalogItem(itemId, data);
   await dbConnect();
   return ServiceCatalogItem.findByIdAndUpdate(itemId, data, { new: true });
 }
 
 export async function deleteServiceCatalogItem(itemId: string) {
-  if (useMock) {
-    mock.deleteServiceCatalogItem(itemId);
-    return true;
-  }
   await dbConnect();
   return ServiceCatalogItem.findByIdAndDelete(itemId);
 }
 
-// Activity Logs
+// ── Activity Logs ─────────────────────────────────────────────────────
 export async function getActivityLogs() {
-  if (useMock) return mock.getActivityLogs();
   await dbConnect();
   return ActivityLog.find({}).sort({ createdAt: -1 }).limit(20).lean();
 }
 
-// Suggested Packages
+// ── Suggested Packages ────────────────────────────────────────────────
 export async function getSuggestedPackages() {
-  if (useMock) return mock.getSuggestedPackages();
   await dbConnect();
   return SuggestedPackage.find({}).lean();
 }
 
-// Client History
+// ── Client Interactions ───────────────────────────────────────────────
+export async function getClientInteractions(clientId: string) {
+  await dbConnect();
+  return ClientInteraction.find({ clientId }).sort({ createdAt: -1 }).lean();
+}
+
+export async function createClientInteraction(data: any) {
+  await dbConnect();
+  return ClientInteraction.create(data);
+}
+
+// ── Client History ─────────────────────────────────────────────────────
 export async function getClientHistory(clientId: string) {
-  if (useMock) return mock.getClientHistory(clientId);
   await dbConnect();
   const client = await Client.findById(clientId);
   const quotations = await Quotation.find({ clientId });
   const invoices = await Invoice.find({ clientId });
   const activityLogs = await ActivityLog.find({ clientId }).sort({ createdAt: -1 });
+  const interactions = await ClientInteraction.find({ clientId }).sort({ createdAt: -1 });
 
   return {
     client,
     quotations,
     invoices,
     activityLogs,
+    interactions,
     pastServices: client?.pastServices ?? []
   };
 }

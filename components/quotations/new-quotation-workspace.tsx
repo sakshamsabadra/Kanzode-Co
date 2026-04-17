@@ -12,8 +12,8 @@ import { GeneratedQuotationPreview } from "@/components/quotations/generated-quo
 import {
   MockQuotationDraft,
   generateMockQuotationDraft
-} from "@/lib/mock-quotation-generator";
-import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice } from "@/app/actions";
+} from "@/lib/quotation-generator";
+import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction } from "@/app/actions";
 
 const sampleRequest =
   "Client needs private limited incorporation, GST registration, and one founders agreement draft urgently. Wants quotation by today.";
@@ -55,7 +55,7 @@ export function NewQuotationWorkspace({
       : null
   );
   const [statusMessage, setStatusMessage] = useState(
-    "Mock extraction is ready with realistic sample data."
+    "Select a client and enter a request to generate a quotation."
   );
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
@@ -63,39 +63,41 @@ export function NewQuotationWorkspace({
   const selectedClient =
     clients.find((client) => client.id === selectedClientId) ?? clients[0];
 
-  function handleAddClient() {
+  async function handleAddClient() {
     if (!quickClient.name || !quickClient.companyName || !quickClient.email) {
-      setStatusMessage("Add at least name, company name, and email for the quick client.");
+      setStatusMessage("Add at least name, company name, and email for the client.");
       return;
     }
 
-    const newClient: Client = {
-      id: `cl-local-${Date.now()}`,
-      name: quickClient.name,
-      companyName: quickClient.companyName,
-      email: quickClient.email,
-      whatsappNumber: quickClient.whatsappNumber || "+91 90000 00000",
-      clientType: quickClient.clientType,
-      pastServices: [],
-      standardTerms: [
-        "50% advance before work begins",
-        "Final delivery upon approval and balance confirmation"
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    try {
+      const saved: any = await createClientAction({
+        name: quickClient.name,
+        companyName: quickClient.companyName,
+        email: quickClient.email,
+        whatsappNumber: quickClient.whatsappNumber || "+91 90000 00000",
+        clientType: quickClient.clientType,
+        pastServices: [],
+        standardTerms: [
+          "50% advance before work begins",
+          "Final delivery upon approval and balance confirmation"
+        ]
+      });
 
-    setClients((current) => [newClient, ...current]);
-    setSelectedClientId(newClient.id);
-    setQuickClient({
-      name: "",
-      companyName: "",
-      email: "",
-      whatsappNumber: "",
-      clientType: "startup"
-    });
-    setShowAddClient(false);
-    setStatusMessage(`Quick client ${newClient.companyName} added for this mock session.`);
+      const newClient = { ...saved, id: saved.id || saved._id?.toString() };
+      setClients((current) => [newClient, ...current]);
+      setSelectedClientId(newClient.id);
+      setQuickClient({
+        name: "",
+        companyName: "",
+        email: "",
+        whatsappNumber: "",
+        clientType: "startup"
+      });
+      setShowAddClient(false);
+      setStatusMessage(`Client ${newClient.companyName} added successfully.`);
+    } catch (e) {
+      setStatusMessage("Failed to add client. Please try again.");
+    }
   }
 
   function handleGenerate() {
@@ -269,7 +271,7 @@ export function NewQuotationWorkspace({
       <Panel
         eyebrow="Section 2"
         title="Request input"
-        description="Paste the raw client message exactly as received. The mock processor will convert it into a structured quotation draft."
+        description="Paste the raw client message exactly as received. The processor will convert it into a structured quotation draft."
       >
         <textarea
           value={requestText}
@@ -282,7 +284,7 @@ export function NewQuotationWorkspace({
       <Panel
         eyebrow="Section 3"
         title="AI extraction preview"
-        description="Mock extraction shows how services, urgency, client fit, pricing hints, and commercial terms can be surfaced before final generation."
+        description="Extraction shows matched services, urgency, client fit, pricing hints, and commercial terms before final generation."
       >
         <ExtractionPreviewCard draft={draft} />
       </Panel>
@@ -298,7 +300,7 @@ export function NewQuotationWorkspace({
       <Panel
         eyebrow="Section 5"
         title="Actions"
-        description="These actions use mock processing today and can later be wired to real API routes, OpenAI extraction, and billing workflows."
+        description="Save, send, or convert the quotation to an invoice."
       >
         <div className="flex flex-wrap gap-3">
           <ActionTrigger onClick={handleGenerate} disabled={isProcessing}>

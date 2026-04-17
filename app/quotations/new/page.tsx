@@ -11,7 +11,7 @@ export default async function NewQuotationPage() {
   return (
     <AppShell
       title="New Quotation"
-      description="Turn a plain-English or WhatsApp-style request into a polished quotation with mock AI extraction and premium commercial formatting."
+      description="Turn a plain-English or WhatsApp-style request into a polished quotation with AI extraction and premium commercial formatting."
       actions={
         <>
           <ActionButton href="/dashboard" variant="secondary">

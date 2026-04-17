@@ -42,19 +42,29 @@ function includesKeyword(text: string, keywords: string[]) {
   return keywords.some((keyword) => text.includes(keyword));
 }
 
+const SERVICE_KEYWORDS: Record<string, string[]> = {
+  "startup structuring": ["private limited", "incorporation", "founders", "startup"],
+  "gst and tds": ["gst", "registration", "tds", "tax"],
+  "commercial contract": ["agreement", "draft", "review", "contract", "founders agreement"],
+  "roc compliance": ["roc", "compliance", "filing", "board"],
+  "virtual cfo": ["cfo", "mis", "finance", "pricing", "budget"]
+};
+
 function matchServices(sourceText: string, serviceCatalog: ServiceCatalogItem[]) {
   const normalized = sourceText.toLowerCase();
 
   return serviceCatalog.filter((service) => {
-    const lookup: Record<string, string[]> = {
-      "svc-startup": ["private limited", "incorporation", "founders", "startup"],
-      "svc-gst": ["gst", "registration", "tds", "tax"],
-      "svc-contract": ["agreement", "draft", "review", "contract", "founders agreement"],
-      "svc-roc": ["roc", "compliance", "filing", "board"],
-      "svc-cfo": ["cfo", "mis", "finance", "pricing", "budget"]
-    };
-
-    return includesKeyword(normalized, lookup[service.id] ?? []);
+    // Match by service name keywords
+    for (const [namePattern, keywords] of Object.entries(SERVICE_KEYWORDS)) {
+      if (service.name.toLowerCase().includes(namePattern) && includesKeyword(normalized, keywords)) {
+        return true;
+      }
+    }
+    // Match by tags
+    if (service.tags && service.tags.length > 0) {
+      return includesKeyword(normalized, service.tags);
+    }
+    return false;
   });
 }
 
@@ -86,7 +96,7 @@ export function generateMockQuotationDraft({
       id: `draft-line-${index + 1}`,
       serviceCatalogItemId: service.id,
       title:
-        service.id === "svc-contract" && normalized.includes("founders")
+        service.name.toLowerCase().includes("contract") && normalized.includes("founders")
           ? "Founders agreement draft"
           : service.name,
       quantity: 1,

@@ -5,11 +5,7 @@ if (typeof dns.setDefaultResultOrder === 'function') {
   dns.setDefaultResultOrder('ipv4first');
 }
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-if (!MONGODB_URI) {
-  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
-}
+const MONGODB_URI = "mongodb+srv://shivansh1411_db_user:YTrOLudavcRLe7aX@cluster0.opumseu.mongodb.net/kanzode?appName=Cluster0";
 
 /**
  * Global is used here to maintain a cached connection across hot reloads
@@ -33,7 +29,7 @@ async function dbConnect() {
       family: 4, // Force IPv4 to avoid DNS SRV issues
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       return mongoose;
     });
   }

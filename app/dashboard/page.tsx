@@ -6,18 +6,10 @@ import { DataTable } from "@/components/ui/data-table";
 import { Panel } from "@/components/ui/panel";
 import { StatusBadge } from "@/components/ui/status-badge";
 import * as dataService from "@/lib/data-service";
-import { seedDatabase } from "@/lib/seed";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export default async function DashboardPage() {
-  let clients = await dataService.getClients();
-  
-  // Auto-seed if empty
-  if (clients.length === 0) {
-    await seedDatabase();
-    clients = await dataService.getClients();
-  }
-
+  const clients = await dataService.getClients();
   const quotations = await dataService.getQuotations();
   const invoices = await dataService.getInvoices();
   const activityLogs = await dataService.getActivityLogs();
@@ -48,7 +40,7 @@ export default async function DashboardPage() {
         <DashboardCard
           title="Active clients"
           value={String(clients.length).padStart(2, "0")}
-          description="Seeded client records with pricing memory and standard terms."
+          description="Client records with pricing memory and standard terms."
           icon={<Users className="h-5 w-5" />}
           trend="+12% this quarter"
         />
@@ -57,21 +49,21 @@ export default async function DashboardPage() {
           value={formatCurrency(totalPipeline)}
           description="Open proposals currently under review or awaiting approval."
           icon={<FileText className="h-5 w-5" />}
-          trend="7 live quotations"
+          trend={`${quotations.length} live quotations`}
         />
         <DashboardCard
           title="Invoices due"
           value={String(overdueInvoices.length).padStart(2, "0")}
           description="Collections needing follow-up this week."
           icon={<Receipt className="h-5 w-5" />}
-          trend="2 require escalation"
+          trend={`${overdueInvoices.length > 0 ? overdueInvoices.length : 'No'} require attention`}
         />
         <DashboardCard
           title="Recent activity"
-          value="18"
+          value={String(activityLogs.length)}
           description="Client opens, approvals, WhatsApp sends, and payment updates."
           icon={<Activity className="h-5 w-5" />}
-          trend="Live mock feed"
+          trend="Live feed"
         />
       </section>
 
@@ -157,7 +149,7 @@ export default async function DashboardPage() {
         <Panel
           eyebrow="Operations"
           title="Suggested workflow"
-          description="A lightweight process block for demo storytelling and implementation planning."
+          description="A lightweight process block for workflow planning."
         >
           <div className="space-y-4">
             {[
@@ -186,7 +178,7 @@ export default async function DashboardPage() {
         <Panel
           eyebrow="Activity"
           title="Latest logs"
-          description="Mock events give every page realistic, production-style context."
+          description="Recent client interactions, approvals, and payment updates."
         >
           <div className="space-y-3">
             {normalizedLogs.slice(0, 5).map((item: any) => (

@@ -1,10 +1,10 @@
-import { MockQuotationDraft } from "@/lib/mock-quotation-generator";
+import { MockQuotationDraft } from "@/lib/quotation-generator";
 
 export function ExtractionPreviewCard({ draft }: { draft: MockQuotationDraft | null }) {
   if (!draft) {
     return (
       <div className="rounded-none border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
-        Run mock processing to preview extracted services, urgency, suggested terms, and pricing hints.
+        Run extraction to preview matched services, urgency, suggested terms, and pricing hints.
       </div>
     );
   }
