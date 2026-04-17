@@ -3,13 +3,17 @@ import { ActionButton } from "@/components/ui/action-button";
 import { DataTable } from "@/components/ui/data-table";
 import { Panel } from "@/components/ui/panel";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getClients, getInvoices } from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import Link from "next/link";
 
-export default function InvoicesPage() {
-  const invoices = getInvoices();
-  const clients = getClients();
+export default async function InvoicesPage() {
+  const invoices = await dataService.getInvoices();
+  const clients = await dataService.getClients();
+
+  // Normalize for rendering
+  const normalizedInvoices = JSON.parse(JSON.stringify(invoices));
+  const normalizedClients = JSON.parse(JSON.stringify(clients));
 
   return (
     <AppShell
@@ -29,8 +33,8 @@ export default function InvoicesPage() {
             {
               key: "invoiceNumber",
               title: "Invoice #",
-              render: (value, row) => (
-                <Link href={`/invoices/${(row as { id: string }).id}`} className="font-semibold text-brand-700 hover:underline">
+              render: (value, row: any) => (
+                <Link href={`/invoices/${row.id}`} className="font-semibold text-brand-700 hover:underline">
                   {String(value)}
                 </Link>
               )
@@ -46,7 +50,7 @@ export default function InvoicesPage() {
               key: "clientId",
               title: "Client",
               render: (value) => {
-                const client = clients.find((item) => item.id === value);
+                const client = normalizedClients.find((item: any) => item.id === value);
                 return client?.companyName ?? "Unknown client";
               }
             },
@@ -83,7 +87,7 @@ export default function InvoicesPage() {
               render: (value) => <StatusBadge status={String(value)} />
             }
           ]}
-          rows={invoices}
+          rows={normalizedInvoices}
         />
       </Panel>
     </AppShell>

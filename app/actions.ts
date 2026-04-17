@@ -1,10 +1,11 @@
 "use server";
 
-import { createQuotation, createInvoiceFromQuotation, updateQuotationStatus } from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
 import { MockQuotationDraft } from "@/lib/mock-quotation-generator";
+import { revalidatePath } from "next/cache";
 
 export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: string, sourceText: string, partyId?: string) {
-  const quotation = createQuotation({
+  const quotation = await dataService.createQuotation({
     clientId,
     partyId,
     quotationType: draft.quotationType,
@@ -21,15 +22,66 @@ export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: st
     notes: draft.notes
   });
 
-  return quotation.id;
+  revalidatePath("/dashboard");
+  revalidatePath("/quotations");
+  
+  return quotation._id.toString();
 }
 
 export async function convertSavedQuotationToInvoice(quotationId: string) {
-  const invoice = createInvoiceFromQuotation(quotationId);
-  return invoice.id;
+  const invoice = await dataService.createInvoiceFromQuotation(quotationId);
+  revalidatePath("/dashboard");
+  revalidatePath("/invoices");
+  return invoice._id.toString();
 }
 
 export async function sendSavedQuotation(quotationId: string) {
-  updateQuotationStatus(quotationId, "sent");
-  return true;
+  await dataService.updateQuotationStatus(quotationId, "sent");
+  revalidatePath(`/quotations/${quotationId}`);
+}
+
+export async function createPartyAction(data: any) {
+  await dataService.createParty(data);
+  revalidatePath("/clients");
+}
+
+export async function deletePartyAction(id: string) {
+  await dataService.deleteParty(id);
+  revalidatePath("/clients");
+}
+
+export async function createTaskAction(data: any) {
+  await dataService.createTask(data);
+  revalidatePath("/tasks");
+}
+
+export async function updateTaskAction(id: string, data: any) {
+  await dataService.updateTask(id, data);
+  revalidatePath("/tasks");
+}
+
+export async function deleteTaskAction(id: string) {
+  await dataService.deleteTask(id);
+  revalidatePath("/tasks");
+}
+
+export async function addServiceAction(data: any) {
+  await dataService.addServiceCatalogItem(data);
+  revalidatePath("/services");
+}
+
+export async function updateServiceAction(id: string, data: any) {
+  await dataService.updateServiceCatalogItem(id, data);
+  revalidatePath("/services");
+}
+
+export async function deleteServiceAction(id: string) {
+  await dataService.deleteServiceCatalogItem(id);
+  revalidatePath("/services");
+}
+
+export async function markInvoicePaidAction(id: string) {
+  await dataService.updateInvoiceStatus(id, "paid");
+  revalidatePath(`/invoices/${id}`);
+  revalidatePath("/dashboard");
 }

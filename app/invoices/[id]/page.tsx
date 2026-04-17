@@ -3,8 +3,10 @@ export const dynamic = "force-dynamic";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/app-shell";
 import { ActionButton } from "@/components/ui/action-button";
+import { ShareButton, PrintButton } from "@/components/ui/client-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getClientById, getInvoiceById, getPartyById, getQuotationById, updateInvoiceStatus } from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
+import { markInvoicePaidAction } from "@/app/actions";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export default async function InvoiceDetailPage({
@@ -13,21 +15,15 @@ export default async function InvoiceDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const invoice = getInvoiceById(id);
+  const invoice: any = await dataService.getInvoiceById(id);
 
   if (!invoice) {
     notFound();
   }
 
-  const client = getClientById(invoice.clientId);
-  const quotation = invoice.quotationId ? getQuotationById(invoice.quotationId) : null;
-  const party = invoice.partyId ? getPartyById(invoice.partyId) : null;
-
-  async function handleMarkPaid() {
-    "use server";
-    updateInvoiceStatus(invoice!.id, "paid");
-    redirect(`/invoices/${invoice!.id}`);
-  }
+  const client: any = await dataService.getClientById(invoice.clientId.toString());
+  const quotation: any = invoice.quotationId ? await dataService.getQuotationById(invoice.quotationId.toString()) : null;
+  const party: any = invoice.partyId ? await dataService.getPartyById(invoice.partyId.toString()) : null;
 
   return (
     <AppShell
@@ -35,15 +31,11 @@ export default async function InvoiceDetailPage({
       description="Invoice detail with challan number, payment tracking, and due date."
       actions={
         <form className="flex gap-3 no-print">
-          <ActionButton formAction={handleMarkPaid} disabled={invoice.paymentStatus === "paid"}>
+          <ActionButton formAction={markInvoicePaidAction.bind(null, id)} disabled={invoice.paymentStatus === "paid"}>
             Record payment
           </ActionButton>
-          <ActionButton variant="ghost" onClick={() => { if (typeof window !== 'undefined') { navigator.clipboard.writeText(window.location.href); } }}>
-            Share link
-          </ActionButton>
-          <ActionButton variant="ghost" onClick={() => { if (typeof window !== 'undefined') window.print(); }}>
-            Print
-          </ActionButton>
+          <ShareButton />
+          <PrintButton />
         </form>
       }
     >
@@ -123,7 +115,7 @@ export default async function InvoiceDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {invoice.lineItems.map((item, index) => (
+              {invoice.lineItems.map((item: any, index: number) => (
                 <tr key={`${item.id}-${index}`}>
                   <td className="py-4 pr-4">
                     <p className="font-bold text-slate-900">{item.title}</p>

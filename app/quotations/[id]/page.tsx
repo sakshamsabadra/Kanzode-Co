@@ -4,8 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { convertSavedQuotationToInvoice, sendSavedQuotation } from "@/app/actions";
 import { AppShell } from "@/components/layout/app-shell";
 import { ActionButton } from "@/components/ui/action-button";
+import { ShareButton, PrintButton } from "@/components/ui/client-actions";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { getClientById, getPartyById, getQuotationById } from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
 export default async function QuotationDetailPage({
@@ -14,14 +15,14 @@ export default async function QuotationDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const quotation = getQuotationById(id);
+  const quotation: any = await dataService.getQuotationById(id);
 
   if (!quotation) {
     notFound();
   }
 
-  const client = getClientById(quotation.clientId);
-  const party = quotation.partyId ? getPartyById(quotation.partyId) : null;
+  const client: any = await dataService.getClientById(quotation.clientId.toString());
+  const party: any = quotation.partyId ? await dataService.getPartyById(quotation.partyId.toString()) : null;
 
   async function handleConvert() {
     "use server";
@@ -41,18 +42,14 @@ export default async function QuotationDetailPage({
       description="Quotation detail with challan number, service scope, pricing, and terms."
       actions={
         <form className="flex gap-3 no-print">
-          <ActionButton formAction={handleConvert}>
+          <ActionButton formAction={convertSavedQuotationToInvoice.bind(null, id)}>
             Convert to invoice
           </ActionButton>
-          <ActionButton formAction={handleSend} variant="secondary">
+          <ActionButton formAction={sendSavedQuotation.bind(null, id)} variant="secondary">
             Deliver via portal
           </ActionButton>
-          <ActionButton variant="ghost" onClick={() => { if (typeof window !== 'undefined') { navigator.clipboard.writeText(window.location.href); } }}>
-            Share link
-          </ActionButton>
-          <ActionButton variant="ghost" onClick={() => { if (typeof window !== 'undefined') window.print(); }}>
-            Print
-          </ActionButton>
+          <ShareButton />
+          <PrintButton />
         </form>
       }
     >
@@ -122,7 +119,7 @@ export default async function QuotationDetailPage({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {quotation.lineItems.map((item, index) => (
+              {quotation.lineItems.map((item: any, index: number) => (
                 <tr key={`${item.id}-${index}`}>
                   <td className="py-4 pr-4">
                     <p className="font-bold text-slate-900">{item.title}</p>
@@ -161,7 +158,7 @@ export default async function QuotationDetailPage({
             <p className="mt-4 text-sm leading-relaxed text-slate-600">{quotation.notes}</p>
           )}
           <ul className="mt-4 list-inside list-disc space-y-2 text-sm text-slate-600">
-            {quotation.terms.map((term, i) => (
+            {quotation.terms.map((term: string, i: number) => (
               <li key={i}>{term}</li>
             ))}
           </ul>

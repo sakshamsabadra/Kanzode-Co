@@ -1,9 +1,13 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { ActionButton } from "@/components/ui/action-button";
 import { NewQuotationWorkspace } from "@/components/quotations/new-quotation-workspace";
-import { getClients, getServiceCatalog, getSuggestedPackages } from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
 
-export default function NewQuotationPage() {
+export default async function NewQuotationPage() {
+  const clients = await dataService.getClients();
+  const serviceCatalog = await dataService.getServiceCatalog();
+  const suggestedPackages = await dataService.getSuggestedPackages();
+
   return (
     <AppShell
       title="New Quotation"
@@ -13,14 +17,14 @@ export default function NewQuotationPage() {
           <ActionButton href="/dashboard" variant="secondary">
             Back to dashboard
           </ActionButton>
-          <ActionButton href="/quotations/qt-1001">Open sample quotation</ActionButton>
+          <ActionButton href="/quotations">View quotations</ActionButton>
         </>
       }
     >
       <NewQuotationWorkspace
-        initialClients={getClients()}
-        serviceCatalog={getServiceCatalog()}
-        suggestedPackages={getSuggestedPackages()}
+        initialClients={JSON.parse(JSON.stringify(clients))}
+        serviceCatalog={JSON.parse(JSON.stringify(serviceCatalog))}
+        suggestedPackages={JSON.parse(JSON.stringify(suggestedPackages))}
       />
     </AppShell>
   );

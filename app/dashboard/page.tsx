@@ -5,21 +5,31 @@ import { DashboardCard } from "@/components/ui/dashboard-card";
 import { DataTable } from "@/components/ui/data-table";
 import { Panel } from "@/components/ui/panel";
 import { StatusBadge } from "@/components/ui/status-badge";
-import {
-  getActivityLogs,
-  getClients,
-  getInvoices,
-  getQuotations
-} from "@/lib/mock-storage";
+import * as dataService from "@/lib/data-service";
+import { seedDatabase } from "@/lib/seed";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
-export default function DashboardPage() {
-  const clients = getClients();
-  const quotations = getQuotations();
-  const invoices = getInvoices();
-  const activityLogs = getActivityLogs();
-  const totalPipeline = quotations.reduce((sum, item) => sum + item.total, 0);
-  const overdueInvoices = invoices.filter((item) => item.paymentStatus === "overdue");
+export default async function DashboardPage() {
+  let clients = await dataService.getClients();
+  
+  // Auto-seed if empty
+  if (clients.length === 0) {
+    await seedDatabase();
+    clients = await dataService.getClients();
+  }
+
+  const quotations = await dataService.getQuotations();
+  const invoices = await dataService.getInvoices();
+  const activityLogs = await dataService.getActivityLogs();
+
+  // Normalize IDs for easier matching
+  const normalizedClients = JSON.parse(JSON.stringify(clients));
+  const normalizedQuotations = JSON.parse(JSON.stringify(quotations));
+  const normalizedInvoices = JSON.parse(JSON.stringify(invoices));
+  const normalizedLogs = JSON.parse(JSON.stringify(activityLogs));
+
+  const totalPipeline = normalizedQuotations.reduce((sum: number, item: any) => sum + item.total, 0);
+  const overdueInvoices = normalizedInvoices.filter((item: any) => item.paymentStatus === "overdue");
 
   return (
     <AppShell
@@ -78,7 +88,7 @@ export default function DashboardPage() {
                 key: "clientId",
                 title: "Client",
                 render: (value) => {
-                  const client = clients.find((item) => item.id === value);
+                  const client = normalizedClients.find((item: any) => (item.id || item._id) === value);
                   return client?.companyName ?? "Unknown client";
                 }
               },
@@ -105,7 +115,7 @@ export default function DashboardPage() {
                 render: (value) => <StatusBadge status={String(value)} />
               }
             ]}
-            rows={quotations.slice(0, 4)}
+            rows={normalizedQuotations.slice(0, 4)}
           />
         </Panel>
 
@@ -115,9 +125,9 @@ export default function DashboardPage() {
           description="Premium collection tracking with clear status color-coding."
         >
           <div className="space-y-3">
-            {invoices.slice(0, 3).map((invoice) => (
+            {normalizedInvoices.slice(0, 3).map((invoice: any) => (
               <div
-                key={invoice.id}
+                key={invoice.id || invoice._id}
                 className="rounded-3xl border border-slate-200 bg-white px-5 py-4"
               >
                 <div className="flex items-start justify-between gap-4">
@@ -126,7 +136,7 @@ export default function DashboardPage() {
                       {invoice.invoiceNumber}
                     </p>
                     <p className="mt-1 text-sm text-slate-600">
-                      {clients.find((item) => item.id === invoice.clientId)?.companyName}
+                      {normalizedClients.find((item: any) => (item.id || item._id) === invoice.clientId)?.companyName}
                     </p>
                   </div>
                   <StatusBadge status={invoice.paymentStatus} />
@@ -179,9 +189,9 @@ export default function DashboardPage() {
           description="Mock events give every page realistic, production-style context."
         >
           <div className="space-y-3">
-            {activityLogs.slice(0, 5).map((item) => (
+            {normalizedLogs.slice(0, 5).map((item: any) => (
               <div
-                key={item.id}
+                key={item.id || item._id}
                 className="rounded-3xl border border-slate-200 bg-white px-5 py-4"
               >
                 <div className="flex items-start justify-between gap-4">

@@ -29,8 +29,12 @@ export function NewQuotationWorkspace({
   serviceCatalog,
   suggestedPackages
 }: Props) {
-  const [clients, setClients] = useState(initialClients);
-  const [selectedClientId, setSelectedClientId] = useState(initialClients[0]?.id ?? "");
+  const mappedClients = initialClients.map((c: any) => ({ ...c, id: c.id || c._id.toString() }));
+  const mappedServices = serviceCatalog.map((s: any) => ({ ...s, id: s.id || s._id.toString() }));
+  const mappedPackages = suggestedPackages.map((p: any) => ({ ...p, id: p.id || p._id.toString() }));
+
+  const [clients, setClients] = useState(mappedClients);
+  const [selectedClientId, setSelectedClientId] = useState(mappedClients[0]?.id ?? "");
   const [requestText, setRequestText] = useState(sampleRequest);
   const [showAddClient, setShowAddClient] = useState(false);
   const [quickClient, setQuickClient] = useState({
@@ -45,8 +49,8 @@ export function NewQuotationWorkspace({
       ? generateMockQuotationDraft({
           client: initialClients[0],
           sourceText: sampleRequest,
-          serviceCatalog,
-          suggestedPackages
+          serviceCatalog: mappedServices,
+          suggestedPackages: mappedPackages
         })
       : null
   );
@@ -99,8 +103,8 @@ export function NewQuotationWorkspace({
     const nextDraft = generateMockQuotationDraft({
       client: selectedClient,
       sourceText: requestText,
-      serviceCatalog,
-      suggestedPackages
+      serviceCatalog: mappedServices,
+      suggestedPackages: mappedPackages
     });
     setDraft(nextDraft);
     setStatusMessage(`Quotation draft prepared for ${selectedClient.companyName}.`);
