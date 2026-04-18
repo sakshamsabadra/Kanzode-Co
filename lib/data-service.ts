@@ -160,6 +160,11 @@ export async function deleteQuotation(id: string) {
   await Quotation.findByIdAndDelete(id);
 }
 
+export async function updateQuotation(id: string, data: any) {
+  await dbConnect();
+  return await Quotation.findByIdAndUpdate(id, data, { new: true });
+}
+
 // ── Invoices ──────────────────────────────────────────────────────────
 export async function getInvoices() {
   await dbConnect();

@@ -51,6 +51,20 @@ export function RecentQuotationsTable({
             key: "status",
             title: "Status",
             render: (value) => <StatusBadge status={String(value)} />
+          },
+          {
+            key: "id",
+            title: "Action",
+            align: "right",
+            render: (value) => (
+              <Link 
+                href={`/quotations/${value}/edit`}
+                onClick={(e) => e.stopPropagation()}
+                className="px-2 py-1 text-[10px] font-bold uppercase text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors"
+              >
+                Edit
+              </Link>
+            )
           }
         ]}
         rows={quotations}

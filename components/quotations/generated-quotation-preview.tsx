@@ -257,7 +257,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
         </div>
         <div className="space-y-2">
           {draft.terms.map((term, i) => (
-            <div key={i} className="flex items-start gap-2 group">
+            <div key={`term-${i}-${term.substring(0, 10)}`} className="flex items-start gap-2 group">
               <span className="mt-2.5 shrink-0 text-xs font-bold text-blue-400">{i + 1}.</span>
               {canEdit ? (
                 <input

@@ -45,9 +45,9 @@ export function DataTable<T extends object>({
             <p className="text-sm font-medium text-slate-500">No records found matching your selection.</p>
           </div>
         ) : (
-          rows.map((row, rowIndex) => (
+          rows.map((row: any, rowIndex) => (
             <div
-              key={rowIndex}
+              key={row.id || row._id || rowIndex}
               onClick={() => {
                 if (rowHref) {
                   router.push(rowHref(row));

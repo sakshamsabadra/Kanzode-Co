@@ -135,8 +135,8 @@ export function SearchableQuotationList({
             align: "right",
             render: (value) => (
               <div className="flex justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                <Link href={`/quotations/${value}`} className="px-2 py-1 text-xs font-semibold text-blue-600 hover:bg-blue-50 rounded">
-                  Edit / View
+                <Link href={`/quotations/${value}/edit`} className="px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-brand-600 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors">
+                  Edit
                 </Link>
                 <button
                   onClick={async () => {

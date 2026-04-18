@@ -52,6 +52,13 @@ export async function deleteInvoiceAction(id: string) {
   revalidatePath("/dashboard");
 }
 
+export async function updateQuotationAction(id: string, data: any) {
+  await dataService.updateQuotation(id, data);
+  revalidatePath(`/quotations/${id}`);
+  revalidatePath("/quotations");
+  revalidatePath("/dashboard");
+}
+
 export async function createPartyAction(data: any) {
   await dataService.createParty(data);
   revalidatePath("/clients");
