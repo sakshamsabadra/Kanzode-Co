@@ -14,6 +14,7 @@ import {
   generateMockQuotationDraft
 } from "@/lib/quotation-generator";
 import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction } from "@/app/actions";
+import { toast } from "react-hot-toast";
 
 const sampleRequest =
   "Client needs private limited incorporation, GST registration, and one founders agreement draft urgently. Wants quotation by today.";

@@ -4,8 +4,8 @@ import { EditQuotationWorkspace } from "@/components/quotations/edit-quotation-w
 import * as dataService from "@/lib/data-service";
 import { notFound } from "next/navigation";
 
-export default async function EditQuotationPage({ params }: { params: { id: string } }) {
-  const { id } = params;
+export default async function EditQuotationPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const quotation = await dataService.getQuotationById(id);
   
   if (!quotation) {
