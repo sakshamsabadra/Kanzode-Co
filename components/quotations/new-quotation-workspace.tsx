@@ -13,7 +13,7 @@ import {
   MockQuotationDraft,
   generateMockQuotationDraft
 } from "@/lib/quotation-generator";
-import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction } from "@/app/actions";
+import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction, analyzeRequestAction } from "@/app/actions";
 import { toast } from "react-hot-toast";
 
 const sampleRequest =
@@ -106,21 +106,33 @@ export function NewQuotationWorkspace({
     }
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!selectedClient) return;
-    const nextDraft = generateMockQuotationDraft({
-      client: selectedClient,
-      sourceText: requestText,
-      serviceCatalog: mappedServices,
-      suggestedPackages: mappedPackages
-    });
-    setDraft(nextDraft);
-    setStatusMessage(`Quotation draft prepared for ${selectedClient.companyName}.`);
+    setIsProcessing(true);
+    toast.loading("AI is analyzing request...", { id: "analyze" });
+    try {
+      const aiDraft = await analyzeRequestAction(requestText, selectedClient.id);
+      setDraft(aiDraft);
+      toast.success("Analysis complete!", { id: "analyze" });
+      setStatusMessage(`AI-powered quotation draft prepared for ${selectedClient.companyName}.`);
+    } catch (e: any) {
+      console.error(e);
+      const nextDraft = generateMockQuotationDraft({
+        client: selectedClient,
+        sourceText: requestText,
+        serviceCatalog: mappedServices,
+        suggestedPackages: mappedPackages
+      });
+      setDraft(nextDraft);
+      toast.error("AI analysis failed. Used local fallback.", { id: "analyze" });
+      setStatusMessage(`Local quotation draft prepared for ${selectedClient.companyName}.`);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   function handleRegenerate() {
     handleGenerate();
-    setStatusMessage("Quotation regenerated with refreshed pricing and urgency interpretation.");
   }
 
   async function handleSaveDraft() {

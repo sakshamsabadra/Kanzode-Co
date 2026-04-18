@@ -3,6 +3,22 @@
 import * as dataService from "@/lib/data-service";
 import { MockQuotationDraft } from "@/lib/quotation-generator";
 import { revalidatePath } from "next/cache";
+import { analyzeRequestWithAI } from "@/lib/ai-service";
+
+export async function analyzeRequestAction(sourceText: string, clientId: string) {
+  const client = await dataService.getClientById(clientId);
+  const serviceCatalog = await dataService.getServiceCatalog();
+  const suggestedPackages = await dataService.getSuggestedPackages();
+
+  if (!client) throw new Error("Client not found");
+
+  return await analyzeRequestWithAI(
+    sourceText,
+    JSON.parse(JSON.stringify(client)),
+    JSON.parse(JSON.stringify(serviceCatalog)),
+    JSON.parse(JSON.stringify(suggestedPackages))
+  );
+}
 
 export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: string, sourceText: string, partyId?: string) {
   const quotation = await dataService.createQuotation({

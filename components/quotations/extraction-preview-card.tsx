@@ -119,9 +119,9 @@ export function ExtractionPreviewCard({ draft, onChange }: ExtractionPreviewCard
       {/* Extracted Services */}
       <div className="p-4 border-b border-slate-100">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-          Extracted Services ({draft.extractedServices.length})
+          Extracted Services ({(draft.extractedServices || []).length})
         </p>
-        {draft.extractedServices.length === 0 ? (
+        {(!draft.extractedServices || draft.extractedServices.length === 0) ? (
           <p className="text-sm text-slate-500 italic">No services matched — add line items manually below.</p>
         ) : (
           <div className="space-y-2">
@@ -153,7 +153,7 @@ export function ExtractionPreviewCard({ draft, onChange }: ExtractionPreviewCard
       <div className="p-4">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Suggested Terms</p>
         <div className="space-y-1.5">
-          {draft.suggestedTerms.map((term, i) => (
+          {(draft.suggestedTerms || []).map((term, i) => (
             <div key={i} className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700">
               {term}
             </div>

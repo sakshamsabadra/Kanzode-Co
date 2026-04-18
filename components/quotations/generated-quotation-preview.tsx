@@ -129,7 +129,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
                 <td className="px-4 py-3">
                   {canEdit ? (
                     <input
-                      value={item.title}
+                      value={item.title ?? ""}
                       onChange={(e) => updateLineItem(item.id, "title", e.target.value)}
                       className="w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-medium text-slate-900 outline-none hover:border-slate-200 focus:border-blue-400 focus:bg-white transition"
                     />
@@ -142,7 +142,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
                     <input
                       type="number"
                       min={1}
-                      value={item.quantity}
+                      value={item.quantity ?? 1}
                       onChange={(e) => updateLineItem(item.id, "quantity", e.target.value)}
                       className="w-14 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-right text-slate-700 outline-none hover:border-slate-200 focus:border-blue-400 focus:bg-white transition"
                     />
@@ -155,7 +155,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
                     <input
                       type="number"
                       min={0}
-                      value={item.unitPrice}
+                      value={item.unitPrice ?? 0}
                       onChange={(e) => updateLineItem(item.id, "unitPrice", e.target.value)}
                       className="w-24 rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm text-right text-slate-700 outline-none hover:border-slate-200 focus:border-blue-400 focus:bg-white transition"
                     />
@@ -201,7 +201,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Notes</p>
           {canEdit ? (
             <textarea
-              value={draft.notes}
+              value={draft.notes ?? ""}
               onChange={(e) => onChange?.({ notes: e.target.value })}
               className="w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400 min-h-[60px]"
             />
@@ -224,7 +224,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
                   type="number"
                   min={0}
                   max={100}
-                  value={draft.taxPercent}
+                  value={draft.taxPercent ?? 0}
                   onChange={(e) => updateTaxPercent(e.target.value)}
                   className="w-14 rounded-lg bg-white/10 border border-white/20 px-2 py-1 text-right text-sm text-white outline-none focus:border-white/50"
                 />
@@ -261,7 +261,7 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
               <span className="mt-2.5 shrink-0 text-xs font-bold text-blue-400">{i + 1}.</span>
               {canEdit ? (
                 <input
-                  value={term}
+                  value={term ?? ""}
                   onChange={(e) => updateTerm(i, e.target.value)}
                   className="flex-1 rounded-xl border border-slate-200 bg-blue-50 px-3 py-2 text-sm text-slate-700 outline-none focus:border-blue-400 focus:bg-white transition"
                 />

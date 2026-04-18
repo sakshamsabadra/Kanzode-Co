@@ -3,14 +3,32 @@
 import { ActionButton } from "@/components/ui/action-button";
 
 export function ShareButton() {
-  return (
-    <ActionButton variant="ghost" onClick={() => { 
-      if (typeof window !== 'undefined') {
-        navigator.clipboard.writeText(window.location.href);
-        const { toast } = require("react-hot-toast"); 
-        toast.success("Share link copied to clipboard!"); 
+  const handleShare = async () => {
+    if (typeof window !== 'undefined') {
+      const shareData = {
+        title: "Kanzode & Co. Document",
+        text: "View this document on Kanzode & Co. Advisory Portal",
+        url: window.location.href,
+      };
+
+      try {
+        if (navigator.share && navigator.canShare(shareData)) {
+          await navigator.share(shareData);
+        } else {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Link copied to clipboard!");
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          toast.error("Failed to share link.");
+          console.error("Share Error:", err);
+        }
       }
-    }}>
+    }
+  };
+
+  return (
+    <ActionButton variant="ghost" onClick={handleShare}>
       Share link
     </ActionButton>
   );
