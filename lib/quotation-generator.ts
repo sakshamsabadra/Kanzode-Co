@@ -106,9 +106,9 @@ export function generateMockQuotationDraft({
   });
 
   const subtotal = lineItems.reduce((sum, item) => sum + item.amount, 0);
-  const taxPercent = 18;
-  const taxAmount = Math.round((subtotal * taxPercent) / 100);
-  const total = subtotal + taxAmount;
+  const taxPercent = 0;   // No GST — Kanzode & Co. does not bill GST
+  const taxAmount = 0;
+  const total = subtotal;
   const suggestedTerms = [
     ...client.standardTerms,
     ...(fallbackPackage?.recommendedTerms ?? [])

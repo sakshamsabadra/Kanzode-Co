@@ -40,6 +40,18 @@ export async function sendSavedQuotation(quotationId: string) {
   revalidatePath(`/quotations/${quotationId}`);
 }
 
+export async function deleteQuotationAction(id: string) {
+  await dataService.deleteQuotation(id);
+  revalidatePath("/quotations");
+  revalidatePath("/dashboard");
+}
+
+export async function deleteInvoiceAction(id: string) {
+  await dataService.deleteInvoice(id);
+  revalidatePath("/invoices");
+  revalidatePath("/dashboard");
+}
+
 export async function createPartyAction(data: any) {
   await dataService.createParty(data);
   revalidatePath("/clients");

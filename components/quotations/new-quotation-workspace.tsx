@@ -60,6 +60,11 @@ export function NewQuotationWorkspace({
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
 
+  // Patch any subset of draft fields (keeps existing fields intact)
+  function patchDraft(patch: Partial<MockQuotationDraft>) {
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+  }
+
   const selectedClient =
     clients.find((client) => client.id === selectedClientId) ?? clients[0];
 
@@ -120,13 +125,13 @@ export function NewQuotationWorkspace({
   async function handleSaveDraft() {
     if (!draft || !selectedClient) return;
     setIsProcessing(true);
-    setStatusMessage("Saving quotation draft...");
+    toast.loading("Saving quotation draft...", { id: "draft" });
     try {
       const qId = await saveQuotationDraft(draft, selectedClient.id, requestText);
-      setStatusMessage("Draft saved! Redirecting to preview...");
+      toast.success("Draft saved!", { id: "draft" });
       router.push(`/quotations/${qId}`);
     } catch (e) {
-      setStatusMessage("Failed to save draft.");
+      toast.error("Failed to save draft.", { id: "draft" });
       setIsProcessing(false);
     }
   }
@@ -134,14 +139,14 @@ export function NewQuotationWorkspace({
   async function handleSend() {
     if (!draft || !selectedClient) return;
     setIsProcessing(true);
-    setStatusMessage("Saving and sending quotation...");
+    toast.loading("Sending quotation...", { id: "send" });
     try {
       const qId = await saveQuotationDraft(draft, selectedClient.id, requestText);
       await sendSavedQuotation(qId);
-      setStatusMessage("Sent successfully! Redirecting...");
+      toast.success("Sent successfully!", { id: "send" });
       router.push(`/quotations/${qId}`);
     } catch (e) {
-      setStatusMessage("Failed to send.");
+      toast.error("Failed to send.", { id: "send" });
       setIsProcessing(false);
     }
   }
@@ -149,178 +154,199 @@ export function NewQuotationWorkspace({
   async function handleConvert() {
     if (!draft || !selectedClient) return;
     setIsProcessing(true);
-    setStatusMessage("Saving draft and converting to invoice...");
+    toast.loading("Converting to invoice...", { id: "convert" });
     try {
       const qId = await saveQuotationDraft(draft, selectedClient.id, requestText);
       const invId = await convertSavedQuotationToInvoice(qId);
-      setStatusMessage("Converted to Invoice! Redirecting...");
+      toast.success("Converted to Invoice!", { id: "convert" });
       router.push(`/invoices/${invId}`);
     } catch (e) {
-      setStatusMessage("Failed to convert.");
+      toast.error("Failed to convert.", { id: "convert" });
       setIsProcessing(false);
     }
   }
 
   return (
     <div className="space-y-6">
+      {/* Workflow Explanation Header */}
+      <div className="rounded-[28px] border border-blue-100 bg-blue-50/30 p-6 shadow-sm">
+        <h3 className="flex items-center gap-2 text-lg font-bold text-blue-900">
+          <Sparkles className="h-5 w-5 text-blue-600" />
+          AI Quotation Workflow
+        </h3>
+        <div className="mt-4 grid gap-6 md:grid-cols-4">
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-500">1. Select Client</p>
+            <p className="text-sm text-slate-600">Sets pricing anchors and default terms.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-500">2. Input Request</p>
+            <p className="text-sm text-slate-600">Paste raw intent from WhatsApp/Email.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-500">3. Extract & Review</p>
+            <p className="text-sm text-slate-600">System detects services and detects urgency.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-500">4. Finalize</p>
+            <p className="text-sm text-slate-600">Save as draft, send, or convert to invoice.</p>
+          </div>
+        </div>
+      </div>
+
       {statusMessage ? (
-        <div className="rounded-full border border-slate-200 bg-white px-5 py-3 text-sm text-slate-600 shadow-[0_16px_48px_rgba(15,23,42,0.05)]">
+        <div className="rounded-full border border-blue-100 bg-white px-5 py-3 text-sm text-blue-700 shadow-[0_16px_48px_rgba(37,99,235,0.05)] flex items-center gap-3">
+          <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
           {statusMessage}
         </div>
       ) : null}
 
-      <Panel
-        eyebrow="Section 1"
-        title="Client selection"
-        description="Select an existing client, add a new one quickly, and keep the summary visible while generating the quotation."
-      >
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-          <div className="grid flex-1 gap-4 md:grid-cols-[1fr_auto]">
-            <label className="space-y-2">
-              <span className="text-sm font-medium text-slate-700">Existing client</span>
-              <select
-                value={selectedClientId}
-                onChange={(event) => setSelectedClientId(event.target.value)}
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none"
-              >
-                {clients.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.companyName}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
+        {/* Left Column: Input & Context */}
+        <div className="space-y-6">
+          <Panel
+            eyebrow="Phase 1"
+            title="Source & Context"
+            description="Identify the client and paste their raw request message."
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <label className="space-y-2">
+                  <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Client Selection</span>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedClientId}
+                      onChange={(event) => setSelectedClientId(event.target.value)}
+                      className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                    >
+                      {clients.map((client) => (
+                        <option key={client.id} value={client.id}>
+                          {client.companyName}
+                        </option>
+                      ))}
+                    </select>
+                    <ActionTrigger
+                      variant="secondary"
+                      onClick={() => setShowAddClient((current) => !current)}
+                      className="whitespace-nowrap"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </ActionTrigger>
+                  </div>
+                </label>
+              </div>
 
-            <div className="flex items-end">
-              <ActionTrigger
-                variant="secondary"
-                onClick={() => setShowAddClient((current) => !current)}
-                className="w-full md:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Add new client quickly
+              {showAddClient ? (
+                <div className="grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <input
+                    value={quickClient.name}
+                    onChange={(event) =>
+                      setQuickClient((current) => ({ ...current, name: event.target.value }))
+                    }
+                    placeholder="Contact name"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                  />
+                  <input
+                    value={quickClient.companyName}
+                    onChange={(event) =>
+                      setQuickClient((current) => ({
+                        ...current,
+                        companyName: event.target.value
+                      }))
+                    }
+                    placeholder="Company name"
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                  />
+                  <div className="grid grid-cols-2 gap-3">
+                    <input
+                      value={quickClient.email}
+                      onChange={(event) =>
+                        setQuickClient((current) => ({ ...current, email: event.target.value }))
+                      }
+                      placeholder="Email"
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                    />
+                    <select
+                      value={quickClient.clientType}
+                      onChange={(event) =>
+                        setQuickClient((current) => ({
+                          ...current,
+                          clientType: event.target.value as ClientType
+                        }))
+                      }
+                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                    >
+                      <option value="startup">Startup</option>
+                      <option value="sme">SME</option>
+                      <option value="professional_firm">Firm</option>
+                    </select>
+                  </div>
+                  <ActionTrigger onClick={handleAddClient} className="w-full">Save Client</ActionTrigger>
+                </div>
+              ) : null}
+
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Raw Intent</span>
+                <textarea
+                  value={requestText}
+                  onChange={(event) => setRequestText(event.target.value)}
+                  className="min-h-[180px] w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm leading-6 text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                  placeholder='Client needs private limited incorporation, GST registration, and founders agreement...'
+                />
+              </div>
+
+              <ActionTrigger onClick={handleGenerate} disabled={isProcessing} className="w-full py-4 text-base">
+                <Sparkles className="mr-2 h-5 w-5" />
+                Analyze & Generate Draft
               </ActionTrigger>
             </div>
-          </div>
+          </Panel>
+
+          {selectedClient ? <ClientSummaryCard client={selectedClient} /> : null}
         </div>
 
-        {showAddClient ? (
-          <div className="mt-5 grid gap-4 rounded-[28px] border border-slate-200 bg-slate-50 p-5 md:grid-cols-2 xl:grid-cols-5">
-            <input
-              value={quickClient.name}
-              onChange={(event) =>
-                setQuickClient((current) => ({ ...current, name: event.target.value }))
-              }
-              placeholder="Contact name"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-            />
-            <input
-              value={quickClient.companyName}
-              onChange={(event) =>
-                setQuickClient((current) => ({
-                  ...current,
-                  companyName: event.target.value
-                }))
-              }
-              placeholder="Company name"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-            />
-            <input
-              value={quickClient.email}
-              onChange={(event) =>
-                setQuickClient((current) => ({ ...current, email: event.target.value }))
-              }
-              placeholder="Email"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-            />
-            <input
-              value={quickClient.whatsappNumber}
-              onChange={(event) =>
-                setQuickClient((current) => ({
-                  ...current,
-                  whatsappNumber: event.target.value
-                }))
-              }
-              placeholder="WhatsApp number"
-              className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-            />
-            <div className="flex gap-3">
-              <select
-                value={quickClient.clientType}
-                onChange={(event) =>
-                  setQuickClient((current) => ({
-                    ...current,
-                    clientType: event.target.value as ClientType
-                  }))
-                }
-                className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none"
-              >
-                <option value="startup">Startup</option>
-                <option value="sme">SME</option>
-                <option value="professional_firm">Professional firm</option>
-                <option value="foreign_subsidiary">Foreign subsidiary</option>
-              </select>
-              <ActionTrigger onClick={handleAddClient}>Save</ActionTrigger>
+        {/* Right Column: AI Processing & Review */}
+        <div className="space-y-6">
+          <Panel
+            eyebrow="Phase 2"
+            title="Analysis & Results"
+            description="Review what the system has extracted and the final draft structure."
+          >
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">1. Intelligence Preview</span>
+                <ExtractionPreviewCard draft={draft} onChange={patchDraft} />
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400">2. Commercial Structure</span>
+                <GeneratedQuotationPreview draft={draft} onChange={patchDraft} />
+              </div>
             </div>
-          </div>
-        ) : null}
+          </Panel>
 
-        {selectedClient ? <div className="mt-5"><ClientSummaryCard client={selectedClient} /></div> : null}
-      </Panel>
-
-      <Panel
-        eyebrow="Section 2"
-        title="Request input"
-        description="Paste the raw client message exactly as received. The processor will convert it into a structured quotation draft."
-      >
-        <textarea
-          value={requestText}
-          onChange={(event) => setRequestText(event.target.value)}
-          className="min-h-[220px] w-full rounded-[28px] border border-slate-200 bg-white px-5 py-4 text-sm leading-7 text-slate-700 outline-none"
-          placeholder='Client needs private limited incorporation, GST registration, and one founders agreement draft urgently. Wants quotation by today.'
-        />
-      </Panel>
-
-      <Panel
-        eyebrow="Section 3"
-        title="AI extraction preview"
-        description="Extraction shows matched services, urgency, client fit, pricing hints, and commercial terms before final generation."
-      >
-        <ExtractionPreviewCard draft={draft} />
-      </Panel>
-
-      <Panel
-        eyebrow="Section 4"
-        title="Generated quotation preview"
-        description="Preview the commercial structure before saving, sending, or converting to invoice."
-      >
-        <GeneratedQuotationPreview draft={draft} />
-      </Panel>
-
-      <Panel
-        eyebrow="Section 5"
-        title="Actions"
-        description="Save, send, or convert the quotation to an invoice."
-      >
-        <div className="flex flex-wrap gap-3">
-          <ActionTrigger onClick={handleGenerate} disabled={isProcessing}>
-            <Sparkles className="mr-2 h-4 w-4" />
-            Generate quotation
-          </ActionTrigger>
-          <ActionTrigger variant="secondary" onClick={handleRegenerate} disabled={isProcessing}>
-            Regenerate
-          </ActionTrigger>
-          <ActionTrigger variant="secondary" onClick={handleSaveDraft} disabled={isProcessing}>
-            Save draft
-          </ActionTrigger>
-          <ActionTrigger variant="secondary" onClick={handleSend} disabled={isProcessing}>
-            Send
-          </ActionTrigger>
-          <ActionTrigger variant="ghost" onClick={handleConvert} disabled={isProcessing}>
-            Convert to invoice
-          </ActionTrigger>
+          <Panel
+            eyebrow="Finalize"
+            title="Execution Actions"
+            description="Take the final step to commit this quotation."
+          >
+            <div className="flex flex-wrap gap-3">
+              <ActionTrigger variant="secondary" onClick={handleSaveDraft} disabled={isProcessing || !draft}>
+                Save as Draft
+              </ActionTrigger>
+              <ActionTrigger variant="secondary" onClick={handleSend} disabled={isProcessing || !draft}>
+                Send to Portal
+              </ActionTrigger>
+              <ActionTrigger variant="ghost" onClick={handleConvert} disabled={isProcessing || !draft}>
+                Convert to Invoice
+              </ActionTrigger>
+              <ActionTrigger variant="ghost" onClick={handleRegenerate} disabled={isProcessing || !draft} className="ml-auto">
+                Reset Analysis
+              </ActionTrigger>
+            </div>
+          </Panel>
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }

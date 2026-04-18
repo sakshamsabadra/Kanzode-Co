@@ -33,19 +33,33 @@ textarea {
 }
 
 @media print {
+  @page {
+    size: A4;
+    margin: 8mm 12mm; /* Reduced margins to comfortably fit one page */
+  }
+
   body {
     background: white !important;
     color: #000 !important;
-    font-size: 12pt;
+    font-size: 11pt; /* Slightly smaller font for better fit */
   }
   .no-print {
     display: none !important;
   }
   .print-document {
     max-width: 100% !important;
+    width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
+    
+    /* Enforce 1 page layout */
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important; 
   }
 }
+

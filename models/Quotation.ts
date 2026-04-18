@@ -21,7 +21,7 @@ const QuotationSchema = new Schema({
   taxPercent: { type: Number, required: true },
   taxAmount: { type: Number, required: true },
   total: { type: Number, required: true },
-  status: { type: String, enum: ["draft", "generated", "sent", "opened", "approved"], default: "draft" },
+  status: { type: String, enum: ["draft", "generated", "sent", "opened", "approved", "invoiced"], default: "draft" },
   validityDays: { type: Number, default: 7 },
   terms: { type: [String], default: [] },
   notes: { type: String },

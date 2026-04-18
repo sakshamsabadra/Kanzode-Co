@@ -16,8 +16,9 @@ export function SidebarNav() {
     <aside className="hidden w-[280px] shrink-0 flex-col rounded-[32px] border border-blue-100 bg-brand-950 p-6 text-white shadow-[0_24px_80px_rgba(16,16,16,0.16)] lg:flex">
       <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500 text-white">
-            <Building2 className="h-5 w-5" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-white overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dashboard-logo.png" alt="CS Logo" className="h-8 w-auto object-contain" />
           </div>
           <div>
             <p className="text-sm uppercase tracking-[0.28em] text-white/45">Kanzode</p>

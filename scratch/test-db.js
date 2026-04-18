@@ -2,7 +2,17 @@ const mongoose = require('mongoose');
 const dns = require('dns');
 
 // Test with SRV
-const uri = "mongodb+srv://rudrasingh1108_db_user:rudr%40110122@cluster0.cddx75z.mongodb.net/?appName=Cluster0";
+const uri = "mongodb://rudrasingh1108_db_user:rudr%40110122@ac-xudjmh9-shard-00-00.cddx75z.mongodb.net:27017,ac-xudjmh9-shard-00-01.cddx75z.mongodb.net:27017,ac-xudjmh9-shard-00-02.cddx75z.mongodb.net:27017/?ssl=true&replicaSet=atlas-qz2i1h-shard-0&authSource=admin&retryWrites=true&w=majority";
+
+
+// Force using Google/Cloudflare DNS to resolve MongoDB SRV records
+try {
+  dns.setServers(['8.8.8.8', '1.1.1.1']);
+  console.log("DNS servers set to 8.8.8.8, 1.1.1.1");
+} catch (e) {
+  console.warn("Could not set custom DNS servers:", e);
+}
+
 
 async function test() {
   console.log("Testing connection to:", uri);

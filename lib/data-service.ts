@@ -15,6 +15,20 @@ import {
   TaskStatus
 } from "@/types";
 
+/**
+ * `.lean()` skips Mongoose's `toJSON` transform, so `_id` is never mapped to
+ * the virtual `id` field. This helper normalises the result so every document
+ * always has a plain-string `id` property that view pages can rely on.
+ */
+function normalise<T extends { _id?: any; id?: string }>(doc: T): T & { id: string } {
+  const id = doc._id?.toString() ?? doc.id ?? "";
+  return { ...doc, id, _id: id };
+}
+
+function normaliseMany<T extends { _id?: any; id?: string }>(docs: T[]): (T & { id: string })[] {
+  return docs.map(normalise);
+}
+
 // Helper for activity logs
 async function appendActivity(
   clientId: string,
@@ -35,12 +49,13 @@ async function appendActivity(
 // ── Clients ──────────────────────────────────────────────────────────
 export async function getClients() {
   await dbConnect();
-  return Client.find({}).sort({ createdAt: -1 }).lean();
+  return normaliseMany(await Client.find({}).sort({ createdAt: -1 }).lean());
 }
 
 export async function getClientById(clientId: string) {
   await dbConnect();
-  return Client.findById(clientId).lean();
+  const doc = await Client.findById(clientId).lean();
+  return doc ? normalise(doc) : null;
 }
 
 export async function createClient(data: any) {
@@ -61,12 +76,13 @@ export async function deleteClient(clientId: string) {
 // ── Quotations ───────────────────────────────────────────────────────
 export async function getQuotations() {
   await dbConnect();
-  return Quotation.find({}).sort({ createdAt: -1 }).lean();
+  return normaliseMany(await Quotation.find({}).sort({ createdAt: -1 }).lean());
 }
 
 export async function getQuotationById(quotationId: string) {
   await dbConnect();
-  return Quotation.findById(quotationId).lean();
+  const doc = await Quotation.findById(quotationId).lean();
+  return doc ? normalise(doc) : null;
 }
 
 export async function createQuotation(data: any) {
@@ -139,15 +155,21 @@ export async function updateQuotationLineItems(quotationId: string, lineItems: a
   return quotation;
 }
 
+export async function deleteQuotation(id: string) {
+  await dbConnect();
+  await Quotation.findByIdAndDelete(id);
+}
+
 // ── Invoices ──────────────────────────────────────────────────────────
 export async function getInvoices() {
   await dbConnect();
-  return Invoice.find({}).sort({ createdAt: -1 }).lean();
+  return normaliseMany(await Invoice.find({}).sort({ createdAt: -1 }).lean());
 }
 
 export async function getInvoiceById(invoiceId: string) {
   await dbConnect();
-  return Invoice.findById(invoiceId).lean();
+  const doc = await Invoice.findById(invoiceId).lean();
+  return doc ? normalise(doc) : null;
 }
 
 export async function createInvoiceFromQuotation(quotationId: string) {
@@ -187,6 +209,9 @@ export async function createInvoiceFromQuotation(quotationId: string) {
     "converted",
     `${invoice.invoiceNumber} created from ${quotation.quotationNumber}.`
   );
+
+  quotation.status = "invoiced";
+  await quotation.save();
 
   return invoice;
 }
@@ -267,15 +292,21 @@ export async function updateInvoiceLineItems(invoiceId: string, lineItems: any[]
   return invoice;
 }
 
+export async function deleteInvoice(id: string) {
+  await dbConnect();
+  await Invoice.findByIdAndDelete(id);
+}
+
 // ── Parties ───────────────────────────────────────────────────────────
 export async function getParties() {
   await dbConnect();
-  return Party.find({}).sort({ createdAt: -1 }).lean();
+  return normaliseMany(await Party.find({}).sort({ createdAt: -1 }).lean());
 }
 
 export async function getPartyById(partyId: string) {
   await dbConnect();
-  return Party.findById(partyId).lean();
+  const doc = await Party.findById(partyId).lean();
+  return doc ? normalise(doc) : null;
 }
 
 export async function createParty(data: any) {
@@ -296,7 +327,7 @@ export async function deleteParty(partyId: string) {
 // ── Tasks ─────────────────────────────────────────────────────────────
 export async function getTasks() {
   await dbConnect();
-  return Task.find({}).sort({ createdAt: -1 }).lean();
+  return normaliseMany(await Task.find({}).sort({ createdAt: -1 }).lean());
 }
 
 export async function createTask(data: any) {
@@ -317,7 +348,7 @@ export async function deleteTask(taskId: string) {
 // ── Service Catalog ────────────────────────────────────────────────────
 export async function getServiceCatalog() {
   await dbConnect();
-  return ServiceCatalogItem.find({}).lean();
+  return normaliseMany(await ServiceCatalogItem.find({}).lean());
 }
 
 export async function addServiceCatalogItem(data: any) {

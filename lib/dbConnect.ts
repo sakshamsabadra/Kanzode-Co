@@ -31,6 +31,16 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  // Ensure DNS overrides are applied before connecting, especially on Windows/ISP DNS issues
+  if (typeof dns.setDefaultResultOrder === "function") {
+    dns.setDefaultResultOrder("ipv4first");
+  }
+  try {
+    dns.setServers(["8.8.8.8", "1.1.1.1"]);
+  } catch (e) {
+    // dns.setServers might fail in some runtimes, we'll swallow it but log it
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -41,10 +51,13 @@ async function dbConnect() {
       family: 4, // Force IPv4 to avoid DNS SRV issues
     };
 
+    console.log("Connecting to MongoDB...");
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log("MongoDB connection established.");
       return mongoose;
     });
   }
+
 
   try {
     cached.conn = await cached.promise;

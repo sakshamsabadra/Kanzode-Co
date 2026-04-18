@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import Link from "next/link";
 
 interface DashboardCardProps {
   title: string;
@@ -6,6 +7,7 @@ interface DashboardCardProps {
   description: string;
   trend: string;
   icon: ReactNode;
+  href?: string;
 }
 
 export function DashboardCard({
@@ -13,10 +15,11 @@ export function DashboardCard({
   value,
   description,
   trend,
-  icon
+  icon,
+  href
 }: DashboardCardProps) {
-  return (
-    <div className="rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.05)]">
+  const content = (
+    <div className={`rounded-[30px] border border-white/70 bg-white/90 p-5 shadow-[0_24px_80px_rgba(15,23,42,0.05)] ${href ? "transition-transform hover:scale-[1.02] hover:shadow-[0_24px_80px_rgba(15,23,42,0.1)] cursor-pointer" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-slate-500">{title}</p>
@@ -32,4 +35,6 @@ export function DashboardCard({
       </p>
     </div>
   );
+
+  return href ? <Link href={href} className="block">{content}</Link> : content;
 }

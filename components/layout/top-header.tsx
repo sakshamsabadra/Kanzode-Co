@@ -28,8 +28,9 @@ export function TopHeader({ title, description, actions }: TopHeaderProps) {
     <header className="border-b border-blue-100 bg-white">
       <div className="mx-auto flex h-14 w-full max-w-[1600px] items-center gap-8 px-4 md:px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center bg-brand-600 text-white rounded-md">
-            <Building2 className="h-4 w-4" />
+          <div className="flex h-8 items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dashboard-logo.png" alt="CS Logo" className="h-8 w-auto object-contain" />
           </div>
           <span className="font-semibold text-sm tracking-tight text-brand-900">Kanzode and Co</span>
         </div>
