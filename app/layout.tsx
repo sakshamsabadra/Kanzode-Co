@@ -7,7 +7,7 @@ import "@/app/globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Kanzode and Co",
+  title: "Kanzode & Co.",
   description:
     "Practice management for CA, CS, legal, and business advisory firms."
 };

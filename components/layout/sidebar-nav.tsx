@@ -21,8 +21,7 @@ export function SidebarNav() {
             <img src="/dashboard-logo.png" alt="CS Logo" className="h-8 w-auto object-contain" />
           </div>
           <div>
-            <p className="text-sm uppercase tracking-[0.28em] text-white/45">Kanzode</p>
-            <p className="text-lg font-semibold">and Co</p>
+            <p className="text-base font-semibold tracking-tight">Kanzode <span className="text-white/50">&</span> Co.</p>
           </div>
         </div>
         <p className="mt-4 text-sm leading-6 text-white/60">
