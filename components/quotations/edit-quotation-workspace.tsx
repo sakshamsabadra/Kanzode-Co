@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * EditQuotationWorkspace
+ * Interactive document modification console.
+ */
+
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, ArrowLeft, Plus, Trash2 } from "lucide-react";

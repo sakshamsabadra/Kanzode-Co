@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/app-shell";
 import { ActionButton } from "@/components/ui/action-button";
-import { EditQuotationWorkspace } from "@/components/quotations/edit-quotation-workspace";
+import { EditQuotationWorkspace } from "../../../../components/quotations/edit-quotation-workspace";
 import * as dataService from "@/lib/data-service";
 import { notFound } from "next/navigation";
 
