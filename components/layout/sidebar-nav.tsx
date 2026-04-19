@@ -13,15 +13,15 @@ const iconMap: Record<string, any> = {
 
 export function SidebarNav() {
   return (
-    <aside className="hidden w-[280px] shrink-0 flex-col rounded-[32px] border border-blue-100 bg-brand-950 p-6 text-white shadow-[0_24px_80px_rgba(16,16,16,0.16)] lg:flex">
+    <aside className="hidden w-[320px] shrink-0 flex-col rounded-[32px] border border-blue-100 bg-brand-950 p-6 text-white shadow-[0_24px_80px_rgba(16,16,16,0.16)] lg:flex">
       <div className="rounded-[28px] border border-white/10 bg-white/5 p-5">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-white overflow-hidden">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/dashboard-logo.png" alt="CS Logo" className="h-8 w-auto object-contain" />
           </div>
-          <div>
-            <p className="text-base font-semibold tracking-tight">Kanzode <span className="text-white/50">&</span> Co.</p>
+          <div className="min-w-0 overflow-visible">
+            <p className="text-[13px] font-semibold tracking-tight whitespace-nowrap">Kanzode <span className="text-white/50">&</span> Co.</p>
           </div>
         </div>
         <p className="mt-4 text-sm leading-6 text-white/60">

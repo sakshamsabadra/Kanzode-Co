@@ -11,6 +11,7 @@ const QuotationLineItemSchema = new Schema({
 const InvoiceSchema = new Schema({
   quotationId: { type: Schema.Types.ObjectId, ref: "Quotation" },
   challanNumber: { type: String, required: true },
+  challanAmount: { type: Number, default: 0 },
   clientId: { type: Schema.Types.ObjectId, ref: "Client", required: true },
   partyId: { type: Schema.Types.ObjectId, ref: "Party" },
   invoiceNumber: { type: String, required: true, unique: true },

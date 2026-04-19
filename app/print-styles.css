@@ -1,0 +1,67 @@
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+  
+  html, body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  
+  .print-document {
+    page-break-inside: auto;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: none !important;
+  }
+  
+  .print-document > div {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+  
+  .print-document table {
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+  
+  .print-document tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  .print-document tbody {
+    display: table-row-group;
+  }
+  
+  /* Force new page for overflow content */
+  .page-break {
+    page-break-before: always;
+    break-before: page;
+  }
+  
+  /* Hide UI elements when printing */
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Override max-width for printing */
+  .max-w-3xl {
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  /* Ensure content isn't scaled down */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

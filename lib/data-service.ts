@@ -297,6 +297,19 @@ export async function updateInvoiceLineItems(invoiceId: string, lineItems: any[]
   return invoice;
 }
 
+export async function updateInvoice(invoiceId: string, updates: any) {
+  await dbConnect();
+  const invoice = await Invoice.findById(invoiceId);
+  if (!invoice) throw new Error("Invoice not found");
+
+  // Apply updates
+  if (updates.challanNumber !== undefined) invoice.challanNumber = updates.challanNumber;
+  if (updates.challanAmount !== undefined) invoice.challanAmount = updates.challanAmount;
+
+  await invoice.save();
+  return invoice;
+}
+
 export async function deleteInvoice(id: string) {
   await dbConnect();
   await Invoice.findByIdAndDelete(id);

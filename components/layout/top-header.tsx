@@ -32,7 +32,7 @@ export function TopHeader({ title, description, actions }: TopHeaderProps) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/dashboard-logo.png" alt="CS Logo" className="h-8 w-auto object-contain" />
           </div>
-          <span className="font-semibold text-sm tracking-tight text-brand-900">Kanzode & Co.</span>
+          <span className="font-semibold text-sm tracking-tight text-brand-900 whitespace-nowrap">Kanzode & Co.</span>
         </div>
 
         <nav className="flex h-full items-center space-x-6">

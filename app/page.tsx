@@ -26,10 +26,10 @@ export default function LandingPage() {
               />
             </div>
             <div className="flex flex-col items-start justify-center min-w-0">
-              <h1 className="text-2xl lg:text-3xl xl:text-5xl 2xl:text-6xl font-black tracking-widest text-white leading-none whitespace-nowrap truncate max-w-full">
+              <h1 className="text-xl lg:text-2xl xl:text-4xl 2xl:text-5xl font-black tracking-widest text-white leading-none whitespace-nowrap">
                 KANZODE & CO.
               </h1>
-              <p className="text-sm lg:text-lg xl:text-2xl text-blue-200 font-bold uppercase tracking-[0.2em] xl:tracking-[0.3em] mt-2 lg:mt-3 truncate max-w-full">
+              <p className="text-xs lg:text-base xl:text-xl text-blue-200 font-bold uppercase tracking-[0.2em] xl:tracking-[0.3em] mt-2 lg:mt-3 whitespace-nowrap">
                 Company Secretary
               </p>
             </div>

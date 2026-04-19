@@ -121,6 +121,13 @@ export async function markInvoicePaidAction(id: string) {
   revalidatePath("/dashboard");
 }
 
+export async function updateInvoiceAction(id: string, data: any) {
+  await dataService.updateInvoice(id, data);
+  revalidatePath(`/invoices/${id}`);
+  revalidatePath("/invoices");
+  revalidatePath("/dashboard");
+}
+
 export async function createClientAction(data: any) {
   await dataService.createClient(data);
   revalidatePath("/clients");

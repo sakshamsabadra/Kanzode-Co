@@ -28,7 +28,6 @@ export function SearchableQuotationList({
     
     return (
       (q.quotationNumber.toLowerCase().includes(term) ||
-      (q.challanNumber && q.challanNumber.toLowerCase().includes(term)) ||
       clientMatch) && statusMatch
     );
   });
@@ -43,7 +42,7 @@ export function SearchableQuotationList({
           <input
             type="text"
             className="block w-full rounded-full border-0 py-2.5 pl-10 pr-4 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-brand-500"
-            placeholder="Search by quote, challan, or client name..."
+            placeholder="Search by quote or client name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -81,13 +80,6 @@ export function SearchableQuotationList({
               <span className="font-semibold text-brand-700 hover:underline">
                 {String(value)}
               </span>
-            )
-          },
-          {
-            key: "challanNumber",
-            title: "Challan #",
-            render: (value) => (
-              <span className="text-sm text-slate-600">{String(value)}</span>
             )
           },
           {

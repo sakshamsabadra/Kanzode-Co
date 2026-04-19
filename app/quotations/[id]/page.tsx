@@ -1,12 +1,14 @@
 export const dynamic = "force-dynamic";
 
+import "@/app/print-styles.css";
 import { notFound } from "next/navigation";
-import { convertSavedQuotationToInvoice, sendSavedQuotation } from "@/app/actions";
+import { convertSavedQuotationToInvoice, sendSavedQuotation, updateQuotationAction } from "@/app/actions";
+import { EditChallanForm } from "@/components/quotations/edit-challan-form";
 import { AppShell } from "@/components/layout/app-shell";
 import { ConvertQuotationButton, DeliverPortalButton, ShareButton, PrintButton } from "@/components/ui/client-actions";
 import * as dataService from "@/lib/data-service";
 import { formatCurrency, formatDateTime } from "@/lib/format";
-import { numberToWords } from "@/lib/numberToWords";
+// Removed numberToWords import
 
 export default async function QuotationDetailPage({
   params,
@@ -25,7 +27,7 @@ export default async function QuotationDetailPage({
     ? await dataService.getPartyById(quotation.partyId.toString())
     : null;
 
-  const amountInWords = numberToWords(quotation.total);
+  // Removed amountInWords - using Quotation Amount instead
 
   const billToName = party ? party.name : client?.companyName ?? "Unknown Client";
   const billToAddress = party ? party.address : client?.address ?? "";
@@ -41,6 +43,12 @@ export default async function QuotationDetailPage({
       description="Quotation"
       actions={
         <div className="flex gap-3 no-print">
+          <EditChallanForm 
+            quotationId={id} 
+            currentChallanNumber={quotation.challanNumber} 
+            currentChallanAmount={quotation.challanAmount}
+            onUpdate={updateQuotationAction}
+          />
           <ConvertQuotationButton quotationId={id} />
           <DeliverPortalButton quotationId={id} />
           <ShareButton />
@@ -49,10 +57,11 @@ export default async function QuotationDetailPage({
       }
     >
       <article
-        className="print-document mx-auto w-full max-w-3xl bg-white flex flex-col justify-between min-h-[1050px] print:min-h-0"
-        style={{ fontFamily: "'Times New Roman', serif", color: "#111", fontSize: "14px", overflow: "hidden" }}
+        className="print-document mx-auto w-full max-w-3xl bg-white"
+        style={{ fontFamily: "'Times New Roman', serif", color: "#111", fontSize: "14px" }}
       >
-        <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {/* Content wrapper */}
+        <div className="flex flex-col">
           {/* ══════════════════════════════════════════
               HEADER  –  Letterhead + Logo (Image provided by user)
           ══════════════════════════════════════════ */}
@@ -107,11 +116,6 @@ export default async function QuotationDetailPage({
               <p style={{ marginBottom: "6px" }}>Quotation No. : {quotation.quotationNumber}</p>
               <p style={{ marginBottom: "6px" }}>Date : {formatDateTime(quotation.createdAt)}</p>
               <p style={{ marginBottom: "6px" }}>Valid Until : {formatDateTime(validUntil.toISOString())}</p>
-              {quotation.challanNumber && (
-                <p style={{ marginBottom: "6px" }}>
-                  Challan : {quotation.challanNumber}
-                </p>
-              )}
             </div>
           </div>
 
@@ -181,16 +185,11 @@ export default async function QuotationDetailPage({
         {/* BOTTOM SECTION */}
         <div style={{ flexShrink: 0 }}>
           <div className="px-[10%]">
-          {/* Notes */}
-          {quotation.notes && (
-            <div style={{ paddingBottom: "16px", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
-              <strong>Notes:</strong> {quotation.notes}
-            </div>
-          )}
+          {/* Notes removed as per request */}
 
           {/* ══════════════════════════════════════════
               FOOTER SECTION:
-              Left – Words + T&C
+              Left – QR + Small inline text
               Right – Totals
           ══════════════════════════════════════════ */}
           <div
@@ -201,21 +200,23 @@ export default async function QuotationDetailPage({
               marginBottom: "32px",
             }}
           >
-            {/* Left */}
-            <div style={{ flex: 1, paddingRight: "32px", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
-              <p style={{ marginBottom: "16px" }}>
-                <strong>Quotation Amount in Words:</strong> {amountInWords}
-              </p>
-              <p>
-                <strong>Terms and Conditions:</strong>{" "}
-                {quotation.terms?.length > 0 ? (
-                  <span style={{ display: "inline-block", marginTop: "4px" }}>
-                    {quotation.terms.join(" | ")}
-                  </span>
-                ) : (
-                  "Accepted as per mutual discussion."
-                )}
-              </p>
+            {/* Left - QR and small inline text */}
+            <div style={{ flex: 1, paddingRight: "32px" }}>
+              {/* QR Code */}
+              <div style={{ marginBottom: "8px" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src="/payment-qr.png" 
+                  alt="Payment QR Code" 
+                  style={{ width: "80px", height: "80px", objectFit: "contain" }}
+                />
+              </div>
+              {/* Small inline text */}
+              <div style={{ fontSize: "11px", fontFamily: "Arial, sans-serif", color: "#444", lineHeight: "1.4" }}>
+                <span style={{ fontWeight: "bold" }}>Amt:</span> {formatCurrency(quotation.total)} | 
+                <span style={{ fontWeight: "bold" }}>T&C:</span>{" "}
+                {quotation.terms?.length > 0 ? quotation.terms.join(" | ") : "Accepted as per mutual discussion."}
+              </div>
             </div>
 
             {/* Right */}
@@ -224,9 +225,15 @@ export default async function QuotationDetailPage({
                 <span>Sub Total</span>
                 <span>{formatCurrency(quotation.subtotal ?? quotation.total)}</span>
               </div>
+              {quotation.challanNumber && (
+                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #111", padding: "6px 0" }}>
+                  <span>Challan {quotation.challanNumber}</span>
+                  <span>{formatCurrency(quotation.challanAmount ?? 0)}</span>
+                </div>
+              )}
               <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #111", padding: "6px 0", fontWeight: "bold" }}>
                 <span>Total</span>
-                <span>{formatCurrency(quotation.total)}</span>
+                <span>{formatCurrency((quotation.total) + (quotation.challanAmount ?? 0))}</span>
               </div>
             </div>
           </div>
