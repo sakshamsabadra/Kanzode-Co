@@ -48,14 +48,24 @@ async function appendActivity(
 
 // ── Clients ──────────────────────────────────────────────────────────
 export async function getClients() {
-  await dbConnect();
-  return normaliseMany(await Client.find({}).sort({ createdAt: -1 }).lean());
+  try {
+    await dbConnect();
+    return normaliseMany(await Client.find({}).sort({ createdAt: -1 }).lean());
+  } catch (error) {
+    console.error("Error in getClients:", error);
+    return [];
+  }
 }
 
 export async function getClientById(clientId: string) {
-  await dbConnect();
-  const doc = await Client.findById(clientId).lean();
-  return doc ? normalise(doc) : null;
+  try {
+    await dbConnect();
+    const doc = await Client.findById(clientId).lean();
+    return doc ? normalise(doc) : null;
+  } catch (error) {
+    console.error("Error in getClientById:", error);
+    return null;
+  }
 }
 
 export async function createClient(data: any) {
@@ -317,8 +327,13 @@ export async function deleteInvoice(id: string) {
 
 // ── Parties ───────────────────────────────────────────────────────────
 export async function getParties() {
-  await dbConnect();
-  return normaliseMany(await Party.find({}).sort({ createdAt: -1 }).lean());
+  try {
+    await dbConnect();
+    return normaliseMany(await Party.find({}).sort({ createdAt: -1 }).lean());
+  } catch (error) {
+    console.error("Error in getParties:", error);
+    return [];
+  }
 }
 
 export async function getPartyById(partyId: string) {

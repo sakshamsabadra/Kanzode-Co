@@ -10,12 +10,23 @@ export default async function ClientsPage() {
     parties = await dataService.getParties();
   } catch (error) {
     console.error("Failed to load clients/parties:", error);
+    console.error("Error details:", JSON.stringify(error, null, 2));
   }
 
-  return (
-    <ClientsContent 
-      initialClients={JSON.parse(JSON.stringify(clients))} 
-      initialParties={JSON.parse(JSON.stringify(parties))} 
-    />
-  );
+  try {
+    return (
+      <ClientsContent 
+        initialClients={JSON.parse(JSON.stringify(clients))} 
+        initialParties={JSON.parse(JSON.stringify(parties))} 
+      />
+    );
+  } catch (error) {
+    console.error("Failed to serialize data:", error);
+    return (
+      <ClientsContent 
+        initialClients={[]} 
+        initialParties={[]} 
+      />
+    );
+  }
 }
