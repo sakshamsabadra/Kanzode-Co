@@ -1,17 +1,4 @@
 import mongoose from "mongoose";
-import dns from "dns";
-
-if (typeof dns.setDefaultResultOrder === 'function') {
-  dns.setDefaultResultOrder('ipv4first');
-}
-
-// Force using Google/Cloudflare DNS to resolve MongoDB SRV records
-// This bypasses local ISP/DNS blocks that cause ECONNREFUSED
-try {
-  dns.setServers(['8.8.8.8', '1.1.1.1']);
-} catch (e) {
-  console.warn("Could not set custom DNS servers:", e);
-}
 
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -31,16 +18,6 @@ if (!cached) {
 }
 
 async function dbConnect() {
-  // Ensure DNS overrides are applied before connecting, especially on Windows/ISP DNS issues
-  if (typeof dns.setDefaultResultOrder === "function") {
-    dns.setDefaultResultOrder("ipv4first");
-  }
-  try {
-    dns.setServers(["8.8.8.8", "1.1.1.1"]);
-  } catch (e) {
-    // dns.setServers might fail in some runtimes, we'll swallow it but log it
-  }
-
   if (cached.conn) {
     return cached.conn;
   }
@@ -48,7 +25,6 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-      family: 4, // Force IPv4 to avoid DNS SRV issues
     };
 
     console.log("Connecting to MongoDB...");
@@ -57,7 +33,6 @@ async function dbConnect() {
       return mongoose;
     });
   }
-
 
   try {
     cached.conn = await cached.promise;
