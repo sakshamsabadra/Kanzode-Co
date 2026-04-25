@@ -18,6 +18,24 @@ if (!cached) {
 }
 
 async function dbConnect() {
+  // Some networks/runtimes struggle with MongoDB SRV + IPv6 resolution.
+  // We prefer IPv4 and optionally set public DNS resolvers when available.
+  if (process.env.NEXT_RUNTIME !== "edge") {
+    try {
+      const dns = await import("dns");
+      if (typeof dns.setDefaultResultOrder === "function") {
+        dns.setDefaultResultOrder("ipv4first");
+      }
+      try {
+        dns.setServers(["8.8.8.8", "1.1.1.1"]);
+      } catch {
+        // Some runtimes do not allow overriding resolvers.
+      }
+    } catch {
+      // Ignore if dns module is unavailable.
+    }
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -25,6 +43,8 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      family: 4,
+      serverSelectionTimeoutMS: 15000,
     };
 
     console.log("Connecting to MongoDB...");
