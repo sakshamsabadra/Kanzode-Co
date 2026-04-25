@@ -4,7 +4,7 @@ const dns = require('dns');
 // Force using public DNS
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
-const uri = "mongodb+srv://rudrasingh1108_db_user:rudr%40110122@cluster0.cddx75z.mongodb.net/?appName=Cluster0";
+const uri = "mongodb+srv://shivansh1411_db_user:oauUvMUnLZxqW9BD@zode.hwjia9y.mongodb.net/?appName=zode";
 
 async function test() {
   console.log("Testing connection with Google DNS (8.8.8.8)...");
