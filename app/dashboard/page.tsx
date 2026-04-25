@@ -9,10 +9,19 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { RecentQuotationsTable, InvoiceWatchlist } from "@/components/dashboard/dashboard-tables";
 
 export default async function DashboardPage() {
-  const clients = await dataService.getClients();
-  const quotations = await dataService.getQuotations();
-  const invoices = await dataService.getInvoices();
-  const activityLogs = await dataService.getActivityLogs();
+  let clients: any[] = [];
+  let quotations: any[] = [];
+  let invoices: any[] = [];
+  let activityLogs: any[] = [];
+
+  try {
+    clients = await dataService.getClients();
+    quotations = await dataService.getQuotations();
+    invoices = await dataService.getInvoices();
+    activityLogs = await dataService.getActivityLogs();
+  } catch (error) {
+    console.error("Failed to load dashboard data:", error);
+  }
 
   // Normalize IDs for easier matching
   const normalizedClients = JSON.parse(JSON.stringify(clients));

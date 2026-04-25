@@ -9,7 +9,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Kanzode & Co.",
   description:
-    "Practice management for CA, CS, legal, and business advisory firms."
+    "Practice management for CA, CS, legal, and business advisory firms.",
+  icons: {
+    icon: "/dashboard-logo.png",
+  },
 };
 
 export default function RootLayout({
