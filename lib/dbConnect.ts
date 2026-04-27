@@ -6,6 +6,10 @@ if (!MONGODB_URI) {
   throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * Global is used here to maintain a cached connection across hot reloads
  * in development. This prevents connections growing exponentially
@@ -45,13 +49,31 @@ async function dbConnect() {
       bufferCommands: false,
       family: 4,
       serverSelectionTimeoutMS: 15000,
+      connectTimeoutMS: 15000,
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     };
 
     console.log("Connecting to MongoDB...");
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      console.log("MongoDB connection established.");
-      return mongoose;
-    });
+    cached.promise = (async () => {
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const conn = await mongoose.connect(MONGODB_URI, opts);
+          console.log("MongoDB connection established.");
+          return conn;
+        } catch (err) {
+          console.error(`MongoDB connect attempt ${attempt} failed:`, err);
+          if (attempt === maxRetries) {
+            throw err;
+          }
+          await sleep(250 * attempt);
+        }
+      }
+
+      // Unreachable, but TypeScript wants a return.
+      throw new Error("MongoDB connection failed after retries");
+    })();
   }
 
   try {

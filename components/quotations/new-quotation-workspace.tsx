@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Sparkles } from "lucide-react";
 import { Client, ClientType, ServiceCatalogItem, SuggestedPackage } from "@/types";
@@ -61,6 +61,18 @@ export function NewQuotationWorkspace({
   const [isProcessing, setIsProcessing] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    if (clients.length === 0) {
+      setSelectedClientId("");
+      return;
+    }
+
+    setSelectedClientId((current: string) => {
+      if (current && clients.some((c) => c.id === current)) return current;
+      return clients[0].id;
+    });
+  }, [clients]);
+
   // Patch any subset of draft fields (keeps existing fields intact)
   function patchDraft(patch: Partial<MockQuotationDraft>) {
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
@@ -80,7 +92,7 @@ export function NewQuotationWorkspace({
         name: quickClient.name,
         companyName: quickClient.companyName,
         email: quickClient.email,
-        whatsappNumber: quickClient.whatsappNumber || "+91 90000 00000",
+        whatsappNumber: quickClient.whatsappNumber || "+91 9970056589",
         clientType: quickClient.clientType,
         pastServices: [],
         standardTerms: [
@@ -230,13 +242,18 @@ export function NewQuotationWorkspace({
                     <select
                       value={selectedClientId}
                       onChange={(event) => setSelectedClientId(event.target.value)}
-                      className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20"
+                      disabled={clients.length === 0}
+                      className="flex-1 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60"
                     >
-                      {clients.map((client) => (
-                        <option key={client.id} value={client.id}>
-                          {client.companyName}
-                        </option>
-                      ))}
+                      {clients.length === 0 ? (
+                        <option value="">No clients loaded</option>
+                      ) : (
+                        clients.map((client) => (
+                          <option key={client.id} value={client.id}>
+                            {client.companyName}
+                          </option>
+                        ))
+                      )}
                     </select>
                     <ActionTrigger
                       variant="secondary"
