@@ -2,7 +2,7 @@ import { Client, ServiceCatalogItem, SuggestedPackage } from "@/types";
 import { MockQuotationDraft } from "./quotation-generator";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL = "minimax/minimax-m2.5:free";
+const MODEL = "openai/gpt-oss-120b:free";
 
 export async function analyzeRequestWithAI(
   sourceText: string,
@@ -15,12 +15,17 @@ export async function analyzeRequestWithAI(
     throw new Error("AI_KEY_MISSING");
   }
 
+  // Null-safe access – some clients created via quick-add may lack these fields
+  const clientTerms = Array.isArray(client.standardTerms)
+    ? client.standardTerms.join(", ")
+    : "50% advance before work begins";
+
   const systemPrompt = `You are the Senior Managing Partner at Kanzode & Co.
 
 Goal: Convert an unstructured client request into a quotation draft.
 
-Client type: ${client.clientType}
-Standard engagement terms: ${client.standardTerms.join(", ")}
+Client type: ${client.clientType ?? "startup"}
+Standard engagement terms: ${clientTerms}
 
 Service catalog (map ONLY to these IDs):
 ${serviceCatalog.map((s) => `- {"id":"${s.id || (s as any)._id}","name":"${s.name}","unitPrice":${s.unitPrice}}`).join("\n")}
@@ -29,13 +34,31 @@ Rules:
 - Map requested work to closest services from catalog.
 - If urgency is "Urgent", apply 15% premium on unitPrice.
 - Produce professional advisory notes per line item.
-- Return ONLY JSON (no markdown).
+- Return ONLY valid JSON (no markdown, no code fences).
 
-Return JSON with keys: urgency, quotationType, extractedServices, lineItems, subtotal, taxPercent, taxAmount, total, terms, notes.`;
+Return JSON with these exact keys:
+{
+  "urgency": "Standard" or "Urgent",
+  "quotationType": "manual",
+  "extractedServices": [{"id":"...", "name":"...", "whyMatched":"..."}],
+  "lineItems": [{"id":"draft-line-1", "serviceCatalogItemId":"...", "title":"...", "quantity":1, "unitPrice":number, "amount":number}],
+  "subtotal": number,
+  "taxPercent": 0,
+  "taxAmount": 0,
+  "total": number,
+  "terms": ["term1", "term2"],
+  "notes": "string",
+  "enhancedText": "string"
+}
+
+The "enhancedText" should be a professional, well-structured version of the raw "CLIENT REQUEST" provided by the user. Convert informal or shorthand requests into a formal proposal description.`
 
   const userPrompt = `CLIENT REQUEST: "${sourceText}"`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -51,10 +74,13 @@ Return JSON with keys: urgency, quotationType, extractedServices, lineItems, sub
           { role: "user", content: userPrompt }
         ],
         temperature: 0.2,
-        max_tokens: 900,
+        max_tokens: 1500,
         response_format: { type: "json_object" }
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -81,18 +107,35 @@ Return JSON with keys: urgency, quotationType, extractedServices, lineItems, sub
     // Safety: Strip markdown code blocks if the model ignores the json_object instruction
     content = content.replace(/```json\n?|```/g, "").trim();
 
-    const aiOutput = JSON.parse(content);
+    let aiOutput: any;
+    try {
+      aiOutput = JSON.parse(content);
+    } catch (parseErr) {
+      console.error("Failed to parse AI JSON:", content);
+      throw new Error("AI returned malformed JSON. Try again.");
+    }
+
+    // Build a complete MockQuotationDraft with safe fallbacks for every field
+    const urgency = aiOutput.urgency === "Urgent" ? "Urgent" : "Standard";
 
     return {
-      ...aiOutput,
-      extractedServices: aiOutput.extractedServices || [],
-      lineItems: aiOutput.lineItems || [],
+      extractedServices: Array.isArray(aiOutput.extractedServices) ? aiOutput.extractedServices : [],
+      lineItems: Array.isArray(aiOutput.lineItems) ? aiOutput.lineItems : [],
+      urgency,
       quotationType: "manual",
-      clientType: client.clientType,
-      suggestedTerms: aiOutput.terms || [],
+      clientType: client.clientType ?? "startup",
+      suggestedTerms: Array.isArray(aiOutput.terms) ? aiOutput.terms : [],
       pricingHints: [
-        aiOutput.urgency === "Urgent" ? "Priority processing premium (15%) applied." : "Standard turnaround."
-      ]
+        urgency === "Urgent" ? "Priority processing premium (15%) applied." : "Standard turnaround."
+      ],
+      subtotal: typeof aiOutput.subtotal === "number" ? aiOutput.subtotal : 0,
+      taxPercent: typeof aiOutput.taxPercent === "number" ? aiOutput.taxPercent : 0,
+      taxAmount: typeof aiOutput.taxAmount === "number" ? aiOutput.taxAmount : 0,
+      total: typeof aiOutput.total === "number" ? aiOutput.total : 0,
+      validityLabel: urgency === "Urgent" ? "Valid for 3 days" : "Valid for 7 days",
+      notes: typeof aiOutput.notes === "string" ? aiOutput.notes : "AI-generated quotation draft.",
+      terms: Array.isArray(aiOutput.terms) ? aiOutput.terms : [],
+      enhancedText: typeof aiOutput.enhancedText === "string" ? aiOutput.enhancedText : sourceText
     };
   } catch (error) {
     console.error("AI Analysis Failed:", error);

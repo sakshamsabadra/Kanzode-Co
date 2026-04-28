@@ -36,6 +36,7 @@ export interface MockQuotationDraft {
   validityLabel: string;
   notes: string;
   terms: string[];
+  enhancedText: string;
 }
 
 function includesKeyword(text: string, keywords: string[]) {
@@ -147,6 +148,7 @@ export function generateMockQuotationDraft({
       urgency === "Urgent"
         ? "Priority delivery assumed. Draft can be positioned as urgent same-day support."
         : "Standard delivery window applied. Scope can be tightened further before sending.",
-    terms: suggestedTerms
+    terms: suggestedTerms,
+    enhancedText: sourceText // Default to source text for mock
   };
 }

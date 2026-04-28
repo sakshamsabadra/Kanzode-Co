@@ -123,11 +123,31 @@ export function NewQuotationWorkspace({
     setIsProcessing(true);
     toast.loading("AI is analyzing request...", { id: "analyze" });
     try {
-      const aiDraft = await analyzeRequestAction(requestText, selectedClient.id);
-      setDraft(aiDraft);
-      toast.success("Analysis complete!", { id: "analyze" });
-      setStatusMessage(`AI-powered quotation draft prepared for ${selectedClient.companyName}.`);
+      const result = await analyzeRequestAction(requestText, selectedClient.id);
+
+      if (result.success) {
+        setDraft(result.data);
+        // Update the raw intent text with the professional AI enhancement
+        if (result.data.enhancedText) {
+          setRequestText(result.data.enhancedText);
+        }
+        toast.success("Analysis complete!", { id: "analyze" });
+        setStatusMessage(`AI-powered quotation draft prepared for ${selectedClient.companyName}.`);
+      } else {
+        // AI returned a structured error – use local fallback
+        console.warn("AI analysis returned error:", result.error);
+        const nextDraft = generateMockQuotationDraft({
+          client: selectedClient,
+          sourceText: requestText,
+          serviceCatalog: mappedServices,
+          suggestedPackages: mappedPackages
+        });
+        setDraft(nextDraft);
+        toast.error(result.error || "AI analysis failed. Used local fallback.", { id: "analyze" });
+        setStatusMessage(`Local quotation draft prepared for ${selectedClient.companyName}.`);
+      }
     } catch (e: any) {
+      // Network / unexpected errors
       console.error(e);
       const nextDraft = generateMockQuotationDraft({
         client: selectedClient,

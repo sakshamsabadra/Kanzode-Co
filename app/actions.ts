@@ -5,19 +5,43 @@ import { MockQuotationDraft } from "@/lib/quotation-generator";
 import { revalidatePath } from "next/cache";
 import { analyzeRequestWithAI } from "@/lib/ai-service";
 
-export async function analyzeRequestAction(sourceText: string, clientId: string) {
-  const client = await dataService.getClientById(clientId);
-  const serviceCatalog = await dataService.getServiceCatalog();
-  const suggestedPackages = await dataService.getSuggestedPackages();
+/**
+ * Structured result type so the server action never throws –
+ * Next.js won't produce a generic 500 for the client to puzzle over.
+ */
+type AnalyzeResult =
+  | { success: true; data: MockQuotationDraft }
+  | { success: false; error: string };
 
-  if (!client) throw new Error("Client not found");
+export async function analyzeRequestAction(
+  sourceText: string,
+  clientId: string
+): Promise<AnalyzeResult> {
+  try {
+    const client = await dataService.getClientById(clientId);
+    const serviceCatalog = await dataService.getServiceCatalog();
+    const suggestedPackages = await dataService.getSuggestedPackages();
 
-  return await analyzeRequestWithAI(
-    sourceText,
-    JSON.parse(JSON.stringify(client)),
-    JSON.parse(JSON.stringify(serviceCatalog)),
-    JSON.parse(JSON.stringify(suggestedPackages))
-  );
+    if (!client) {
+      return { success: false, error: "Client not found. Please select a valid client." };
+    }
+
+    const draft = await analyzeRequestWithAI(
+      sourceText,
+      JSON.parse(JSON.stringify(client)),
+      JSON.parse(JSON.stringify(serviceCatalog)),
+      JSON.parse(JSON.stringify(suggestedPackages))
+    );
+
+    return { success: true, data: draft };
+  } catch (err: any) {
+    console.error("analyzeRequestAction failed:", err);
+    const message =
+      err?.message === "AI_KEY_MISSING"
+        ? "OpenRouter API key is not configured."
+        : err?.message || "AI analysis failed. Please try again.";
+    return { success: false, error: message };
+  }
 }
 
 export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: string, sourceText: string, partyId?: string) {
