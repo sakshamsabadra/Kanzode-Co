@@ -125,22 +125,22 @@ export default async function QuotationDetailPage({
         </div>
 
           {/* ══════════════════════════════════════════
-              ENHANCED INTENT / DESCRIPTION
+              ENHANCED INTENT / DESCRIPTION (OVERVIEW)
           ══════════════════════════════════════════ */}
           {quotation.sourceText && (
             <div style={{ 
-              marginBottom: "24px", 
-              padding: "16px", 
+              marginBottom: "16px", 
+              padding: "10px 14px", 
               background: "#f8fafc", 
-              borderRadius: "12px",
-              borderLeft: "4px solid #3b82f6",
-              fontSize: "13.5px",
-              lineHeight: "1.7",
-              color: "#334155",
+              borderRadius: "8px",
+              borderLeft: "3px solid #3b82f6",
+              fontSize: "12px",
+              lineHeight: "1.5",
+              color: "#475569",
               fontFamily: "Arial, sans-serif"
             }}>
-              <p style={{ fontWeight: "bold", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", marginBottom: "8px" }}>
-                Project Overview / Scope
+              <p style={{ fontWeight: "bold", fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.1em", color: "#64748b", marginBottom: "4px" }}>
+                Overview
               </p>
               {quotation.sourceText}
             </div>
