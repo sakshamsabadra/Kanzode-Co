@@ -7,27 +7,20 @@ import { NewQuotationWorkspace } from "@/components/quotations/new-quotation-wor
 import * as dataService from "@/lib/data-service";
 
 export default async function NewQuotationPage() {
-  let clients: any[] = [];
-  let serviceCatalog: any[] = [];
-  let suggestedPackages: any[] = [];
-
-  try {
-    clients = await dataService.getClients();
-  } catch (error) {
+  const clients = await dataService.getClients().catch((error) => {
     console.error("Failed to load clients:", error);
-  }
+    return [];
+  });
 
-  try {
-    serviceCatalog = await dataService.getServiceCatalog();
-  } catch (error) {
+  const serviceCatalog = await dataService.getServiceCatalog().catch((error) => {
     console.error("Failed to load service catalog:", error);
-  }
+    return [];
+  });
 
-  try {
-    suggestedPackages = await dataService.getSuggestedPackages();
-  } catch (error) {
+  const suggestedPackages = await dataService.getSuggestedPackages().catch((error) => {
     console.error("Failed to load suggested packages:", error);
-  }
+    return [];
+  });
 
   return (
     <AppShell
