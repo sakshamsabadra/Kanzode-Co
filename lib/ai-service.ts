@@ -71,7 +71,12 @@ Return JSON with keys: urgency, quotationType, extractedServices, lineItems, sub
       throw new Error("AI returned an empty response. Check if the model is available.");
     }
 
-    let content = data.choices[0].message.content;
+    let content = data.choices[0].message?.content;
+
+    if (!content || typeof content !== "string") {
+      console.error("OpenRouter Response (no content):", data);
+      throw new Error("AI returned empty or invalid content. The model may be overloaded or unavailable.");
+    }
 
     // Safety: Strip markdown code blocks if the model ignores the json_object instruction
     content = content.replace(/```json\n?|```/g, "").trim();
