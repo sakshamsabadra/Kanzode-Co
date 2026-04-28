@@ -12,6 +12,8 @@
   }
   
   .print-document {
+    display: flex !important;
+    flex-direction: column !important;
     page-break-inside: auto;
     overflow: visible !important;
     height: auto !important;

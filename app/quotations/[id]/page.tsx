@@ -57,8 +57,13 @@ export default async function QuotationDetailPage({
       }
     >
       <article
-        className="print-document mx-auto w-full max-w-3xl bg-white"
-        style={{ fontFamily: "'Times New Roman', serif", color: "#111", fontSize: "14px" }}
+        className="print-document mx-auto w-full max-w-4xl bg-white flex flex-col"
+        style={{ 
+          fontFamily: "'Times New Roman', serif", 
+          color: "#111", 
+          fontSize: "14px",
+          minHeight: "277mm" // A4 height minus 20mm margins
+        }}
       >
         {/* Content wrapper */}
         <div className="flex flex-col">
@@ -116,8 +121,30 @@ export default async function QuotationDetailPage({
               <p style={{ marginBottom: "6px" }}>Quotation No. : {quotation.quotationNumber}</p>
               <p style={{ marginBottom: "6px" }}>Date : {formatDateTime(quotation.createdAt)}</p>
               <p style={{ marginBottom: "6px" }}>Valid Until : {formatDateTime(validUntil.toISOString())}</p>
-            </div>
           </div>
+        </div>
+
+          {/* ══════════════════════════════════════════
+              ENHANCED INTENT / DESCRIPTION
+          ══════════════════════════════════════════ */}
+          {quotation.sourceText && (
+            <div style={{ 
+              marginBottom: "24px", 
+              padding: "16px", 
+              background: "#f8fafc", 
+              borderRadius: "12px",
+              borderLeft: "4px solid #3b82f6",
+              fontSize: "13.5px",
+              lineHeight: "1.7",
+              color: "#334155",
+              fontFamily: "Arial, sans-serif"
+            }}>
+              <p style={{ fontWeight: "bold", fontSize: "11px", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", marginBottom: "8px" }}>
+                Project Overview / Scope
+              </p>
+              {quotation.sourceText}
+            </div>
+          )}
 
           {/* ══════════════════════════════════════════
               LINE ITEMS TABLE
@@ -182,56 +209,100 @@ export default async function QuotationDetailPage({
           </div>
         </div>
 
-        {/* BOTTOM SECTION */}
-        <div style={{ flexShrink: 0 }}>
-          <div className="px-[10%]">
-          {/* Notes removed as per request */}
+        {/* SPACER to push footer to bottom */}
+        <div style={{ flexGrow: 1 }} />
 
+        {/* BOTTOM SECTION - Always at bottom of last page */}
+        <div 
+          style={{ 
+            flexShrink: 0, 
+            breakInside: "avoid",
+            pageBreakBefore: quotation.lineItems.length > 7 ? "always" : "auto"
+          }}
+        >
+          <div className="px-[10%]">
+          
           {/* ══════════════════════════════════════════
-              FOOTER SECTION:
-              Left – QR + Small inline text
-              Right – Totals
+              COMMERCIAL SUMMARY & QR SECTION
           ══════════════════════════════════════════ */}
           <div
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "flex-end",
-              marginBottom: "32px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "40px",
+              alignItems: "end",
+              marginBottom: "40px",
+              paddingTop: "20px",
+              borderTop: "2px solid #60a5fa"
             }}
           >
-            {/* Left - QR and small inline text */}
-            <div style={{ flex: 1, paddingRight: "32px" }}>
-              {/* QR Code */}
-              <div style={{ marginBottom: "8px" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img 
-                  src="/payment-qr.png" 
-                  alt="Payment QR Code" 
-                  style={{ width: "80px", height: "80px", objectFit: "contain" }}
-                />
+            {/* Left - QR and Terms */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                <div style={{ 
+                  border: "1px solid #e2e8f0", 
+                  padding: "4px", 
+                  borderRadius: "8px", 
+                  background: "#f8fafc" 
+                }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img 
+                    src="/payment-qr.png" 
+                    alt="Payment QR Code" 
+                    style={{ width: "90px", height: "90px", objectFit: "contain" }}
+                  />
+                </div>
+                <div>
+                  <p style={{ fontWeight: "bold", fontSize: "14px", color: "#1e40af", marginBottom: "4px" }}>Scan to Pay</p>
+                  <p style={{ fontSize: "11px", color: "#64748b", lineHeight: "1.4" }}>
+                    Payments accepted via all<br/>major UPI apps and banks.
+                  </p>
+                </div>
               </div>
-              {/* Small inline text */}
-              <div style={{ fontSize: "11px", fontFamily: "Arial, sans-serif", color: "#444", lineHeight: "1.4" }}>
-                <span style={{ fontWeight: "bold" }}>Amt:</span> {formatCurrency(quotation.total)} | 
-                <span style={{ fontWeight: "bold" }}>T&C:</span>{" "}
-                {quotation.terms?.length > 0 ? quotation.terms.join(" | ") : "Accepted as per mutual discussion."}
+
+              {/* Terms inline */}
+              <div style={{ fontSize: "11px", color: "#444", lineHeight: "1.5" }}>
+                <p style={{ fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "#64748b", fontSize: "10px", marginBottom: "4px" }}>Terms & Conditions</p>
+                {quotation.terms?.length > 0 ? (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                    {quotation.terms.map((term: string, i: number) => (
+                      <span key={i} style={{ background: "#f1f5f9", padding: "2px 6px", borderRadius: "4px" }}>
+                        {term}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  "Accepted as per mutual discussion."
+                )}
               </div>
             </div>
 
-            {/* Right */}
-            <div style={{ minWidth: "260px", fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #111", padding: "6px 0" }}>
+            {/* Right - Totals */}
+            <div style={{ fontSize: "14px", fontFamily: "Arial, sans-serif" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", color: "#64748b" }}>
                 <span>Sub Total</span>
                 <span>{formatCurrency(quotation.subtotal ?? quotation.total)}</span>
               </div>
+              
               {quotation.challanNumber && (
-                <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #111", padding: "6px 0" }}>
-                  <span>Challan {quotation.challanNumber}</span>
-                  <span>{formatCurrency(quotation.challanAmount ?? 0)}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: "1px dashed #e2e8f0" }}>
+                  <span style={{ color: "#64748b" }}>Challan {quotation.challanNumber}</span>
+                  <span style={{ fontWeight: "600" }}>{formatCurrency(quotation.challanAmount ?? 0)}</span>
                 </div>
               )}
-              <div style={{ display: "flex", justifyContent: "space-between", borderBottom: "1px solid #111", padding: "6px 0", fontWeight: "bold" }}>
+
+              <div style={{ 
+                display: "flex", 
+                justifyContent: "space-between", 
+                marginTop: "12px",
+                padding: "16px 20px", 
+                background: "#1e40af", 
+                color: "white",
+                borderRadius: "12px",
+                fontWeight: "bold", 
+                fontSize: "18px",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+              }}>
                 <span>Total</span>
                 <span>{formatCurrency((quotation.total) + (quotation.challanAmount ?? 0))}</span>
               </div>
@@ -241,10 +312,10 @@ export default async function QuotationDetailPage({
           </div>
 
           {/* ══════════════════════════════════════════
-              BANK DETAILS & SIGNATORY (Image provided by user)
+              BANK DETAILS & SIGNATORY
           ══════════════════════════════════════════ */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/template-footer.png" alt="Bank Details and Signatory Footer" className="w-full h-auto mt-4" />
+          <img src="/template-footer.png" alt="Bank Details and Signatory Footer" className="w-full h-auto" />
         </div>
       </article>
     </AppShell>
