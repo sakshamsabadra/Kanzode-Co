@@ -9,19 +9,25 @@ import { formatCurrency, formatDateTime } from "@/lib/format";
 import { RecentQuotationsTable, InvoiceWatchlist } from "@/components/dashboard/dashboard-tables";
 
 export default async function DashboardPage() {
-  let clients: any[] = [];
-  let quotations: any[] = [];
-  let invoices: any[] = [];
-  let activityLogs: any[] = [];
+  const clients = await dataService.getClients().catch((error) => {
+    console.error("Failed to load clients:", error);
+    return [];
+  });
 
-  try {
-    clients = await dataService.getClients();
-    quotations = await dataService.getQuotations();
-    invoices = await dataService.getInvoices();
-    activityLogs = await dataService.getActivityLogs();
-  } catch (error) {
-    console.error("Failed to load dashboard data:", error);
-  }
+  const quotations = await dataService.getQuotations().catch((error) => {
+    console.error("Failed to load quotations:", error);
+    return [];
+  });
+
+  const invoices = await dataService.getInvoices().catch((error) => {
+    console.error("Failed to load invoices:", error);
+    return [];
+  });
+
+  const activityLogs = await dataService.getActivityLogs().catch((error) => {
+    console.error("Failed to load activity logs:", error);
+    return [];
+  });
 
   // Normalize IDs for easier matching
   const normalizedClients = JSON.parse(JSON.stringify(clients));

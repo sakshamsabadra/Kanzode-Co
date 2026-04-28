@@ -5,15 +5,15 @@ import * as dataService from "@/lib/data-service";
 import { SearchableInvoiceList } from "@/components/invoices/searchable-invoice-list";
 
 export default async function InvoicesPage() {
-  let invoices: any[] = [];
-  let clients: any[] = [];
-
-  try {
-    invoices = await dataService.getInvoices();
-    clients = await dataService.getClients();
-  } catch (error) {
+  const invoices = await dataService.getInvoices().catch((error) => {
     console.error("Failed to load invoices:", error);
-  }
+    return [];
+  });
+
+  const clients = await dataService.getClients().catch((error) => {
+    console.error("Failed to load clients:", error);
+    return [];
+  });
 
   const normalizedInvoices = JSON.parse(JSON.stringify(invoices));
   const normalizedClients = JSON.parse(JSON.stringify(clients));

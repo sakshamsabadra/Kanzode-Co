@@ -5,15 +5,15 @@ import * as dataService from "@/lib/data-service";
 import { SearchableQuotationList } from "@/components/quotations/searchable-quotation-list";
 
 export default async function QuotationsPage() {
-  let quotations: any[] = [];
-  let clients: any[] = [];
-
-  try {
-    quotations = await dataService.getQuotations();
-    clients = await dataService.getClients();
-  } catch (error) {
+  const quotations = await dataService.getQuotations().catch((error) => {
     console.error("Failed to load quotations:", error);
-  }
+    return [];
+  });
+
+  const clients = await dataService.getClients().catch((error) => {
+    console.error("Failed to load clients:", error);
+    return [];
+  });
 
   const normalizedQuotations = JSON.parse(JSON.stringify(quotations));
   const normalizedClients = JSON.parse(JSON.stringify(clients));

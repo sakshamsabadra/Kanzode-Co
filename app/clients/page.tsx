@@ -2,31 +2,20 @@ import * as dataService from "@/lib/data-service";
 import ClientsContent from "./clients-content";
 
 export default async function ClientsPage() {
-  let clients: any[] = [];
-  let parties: any[] = [];
+  const clients = await dataService.getClients().catch((error) => {
+    console.error("Failed to load clients:", error);
+    return [];
+  });
 
-  try {
-    clients = await dataService.getClients();
-    parties = await dataService.getParties();
-  } catch (error) {
-    console.error("Failed to load clients/parties:", error);
-    console.error("Error details:", JSON.stringify(error, null, 2));
-  }
+  const parties = await dataService.getParties().catch((error) => {
+    console.error("Failed to load parties:", error);
+    return [];
+  });
 
-  try {
-    return (
-      <ClientsContent 
-        initialClients={JSON.parse(JSON.stringify(clients))} 
-        initialParties={JSON.parse(JSON.stringify(parties))} 
-      />
-    );
-  } catch (error) {
-    console.error("Failed to serialize data:", error);
-    return (
-      <ClientsContent 
-        initialClients={[]} 
-        initialParties={[]} 
-      />
-    );
-  }
+  return (
+    <ClientsContent
+      initialClients={JSON.parse(JSON.stringify(clients))}
+      initialParties={JSON.parse(JSON.stringify(parties))}
+    />
+  );
 }
