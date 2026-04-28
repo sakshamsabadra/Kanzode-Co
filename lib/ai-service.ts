@@ -2,7 +2,7 @@ import { Client, ServiceCatalogItem, SuggestedPackage } from "@/types";
 import { MockQuotationDraft } from "./quotation-generator";
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
+const MODEL = "minimax/minimax-m2.5:free";
 
 export async function analyzeRequestWithAI(
   sourceText: string,
@@ -15,31 +15,23 @@ export async function analyzeRequestWithAI(
     throw new Error("AI_KEY_MISSING");
   }
 
-  const systemPrompt = `
-    You are the Senior Managing Partner at Kanzode & Co., a premium business advisory firm. 
-    Your tone is ultra-professional, encouraging, and commercially astute.
+  const systemPrompt = `You are the Senior Managing Partner at Kanzode & Co.
 
-    OBJECTIVE:
-    Analyze a client's unstructured request and transform it into a high-fidelity commercial quotation.
+Goal: Convert an unstructured client request into a quotation draft.
 
-    CLIENT CONTEXT:
-    - Entity Type: ${client.clientType}
-    - Standard Engagement Terms: ${client.standardTerms.join(", ")}
-    
-    SERVICE CATALOG (You must map requests ONLY to these IDs):
-    ${serviceCatalog.map(s => `- [ID: ${s.id || (s as any)._id}] ${s.name} (Base Rate: ₹${s.unitPrice})`).join("\n")}
+Client type: ${client.clientType}
+Standard engagement terms: ${client.standardTerms.join(", ")}
 
-    EXTRACTION RULES:
-    1. STRICT MAPPING: Map the request to the closest matching Service IDs from the catalog.
-    2. PROFESSIONAL NOTES: Write clear, advisory-style notes. Instead of "We will do GST", write "Comprehensive GST registration and compliance setup to ensure your business is fully regulated from day one."
-    3. PRICING STRATEGY: 
-       - If "Standard", use catalog rates.
-       - If "Urgent", apply a 15% professional premium to the unit price.
-    4. TERMS: Include 3-4 professional commercial terms (e.g., "50% advance required", "Validity: 7 days").
-    
-    OUTPUT FORMAT:
-    You MUST return ONLY a valid JSON object. No markdown, no prose before or after.
-  `;
+Service catalog (map ONLY to these IDs):
+${serviceCatalog.map((s) => `- {"id":"${s.id || (s as any)._id}","name":"${s.name}","unitPrice":${s.unitPrice}}`).join("\n")}
+
+Rules:
+- Map requested work to closest services from catalog.
+- If urgency is "Urgent", apply 15% premium on unitPrice.
+- Produce professional advisory notes per line item.
+- Return ONLY JSON (no markdown).
+
+Return JSON with keys: urgency, quotationType, extractedServices, lineItems, subtotal, taxPercent, taxAmount, total, terms, notes.`;
 
   const userPrompt = `CLIENT REQUEST: "${sourceText}"`;
 
@@ -58,6 +50,8 @@ export async function analyzeRequestWithAI(
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
+        temperature: 0.2,
+        max_tokens: 900,
         response_format: { type: "json_object" }
       })
     });
