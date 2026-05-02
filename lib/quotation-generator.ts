@@ -33,6 +33,8 @@ export interface MockQuotationDraft {
   taxPercent: number;
   taxAmount: number;
   total: number;
+  challanNumber?: string;
+  challanAmount?: number;
   validityLabel: string;
   notes: string;
   terms: string[];

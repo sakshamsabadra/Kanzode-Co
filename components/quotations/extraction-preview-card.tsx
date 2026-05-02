@@ -2,7 +2,7 @@
 
 import { MockQuotationDraft } from "@/lib/quotation-generator";
 import { QuotationType } from "@/types";
-import { Zap, Clock, Trash2 } from "lucide-react";
+import { Zap, Clock } from "lucide-react";
 
 interface ExtractionPreviewCardProps {
   draft: MockQuotationDraft | null;
@@ -13,7 +13,7 @@ export function ExtractionPreviewCard({ draft, onChange }: ExtractionPreviewCard
   if (!draft) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-10 text-center text-sm text-slate-500">
-        Click &ldquo;Analyze &amp; Generate Draft&rdquo; to preview matched services, urgency, and terms.
+        Click &ldquo;Generate Draft&rdquo; to preview urgency and quotation type.
       </div>
     );
   }
@@ -36,13 +36,6 @@ export function ExtractionPreviewCard({ draft, onChange }: ExtractionPreviewCard
   function setQuotationType(qt: QuotationType) {
     if (!onChange || !draft) return;
     onChange({ quotationType: qt });
-  }
-
-  function removeService(id: string) {
-    if (!onChange || !draft) return;
-    onChange({
-      extractedServices: draft.extractedServices.filter((s) => s.id !== id),
-    });
   }
 
   return (
@@ -116,50 +109,6 @@ export function ExtractionPreviewCard({ draft, onChange }: ExtractionPreviewCard
         </div>
       </div>
 
-      {/* Extracted Services */}
-      <div className="p-4 border-b border-slate-100">
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-          Extracted Services ({(draft.extractedServices || []).length})
-        </p>
-        {(!draft.extractedServices || draft.extractedServices.length === 0) ? (
-          <p className="text-sm text-slate-500 italic">No services matched — add line items manually below.</p>
-        ) : (
-          <div className="space-y-2">
-            {draft.extractedServices.map((service) => (
-              <div
-                key={service.id}
-                className="flex items-start justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 text-sm">{service.name}</p>
-                  <p className="mt-0.5 text-xs text-slate-500 truncate">{service.whyMatched}</p>
-                </div>
-                {onChange && (
-                  <button
-                    onClick={() => removeService(service.id)}
-                    className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 transition"
-                    title="Remove service"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Suggested Terms */}
-      <div className="p-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Suggested Terms</p>
-        <div className="space-y-1.5">
-          {(draft.suggestedTerms || []).map((term, i) => (
-            <div key={i} className="rounded-lg bg-blue-50 border border-blue-100 px-3 py-2 text-xs text-slate-700">
-              {term}
-            </div>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

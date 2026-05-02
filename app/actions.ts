@@ -51,6 +51,8 @@ export async function saveQuotationDraft(draft: MockQuotationDraft, clientId: st
     quotationType: draft.quotationType,
     sourceText,
     extractedIntent: `Auto-generated proposal - ${draft.urgency}`,
+    challanNumber: draft.challanNumber,
+    challanAmount: draft.challanAmount,
     lineItems: draft.lineItems,
     subtotal: draft.subtotal,
     taxPercent: draft.taxPercent,

@@ -1,13 +1,15 @@
 "use client";
 
 import { MockQuotationDraft } from "@/lib/quotation-generator";
-import { QuotationLineItem } from "@/types";
+import { QuotationLineItem, ServiceCatalogItem } from "@/types";
 import { formatCurrency } from "@/lib/format";
 import { Plus, Trash2, Pencil } from "lucide-react";
+import { useMemo, useState } from "react";
 
 interface GeneratedQuotationPreviewProps {
   draft: MockQuotationDraft | null;
   onChange?: (patch: Partial<MockQuotationDraft>) => void;
+  serviceCatalog?: ServiceCatalogItem[];
 }
 
 function recalcTotals(items: QuotationLineItem[], taxPercent: number) {
@@ -16,7 +18,7 @@ function recalcTotals(items: QuotationLineItem[], taxPercent: number) {
   return { subtotal, taxAmount, total: subtotal + taxAmount };
 }
 
-export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotationPreviewProps) {
+export function GeneratedQuotationPreview({ draft, onChange, serviceCatalog = [] }: GeneratedQuotationPreviewProps) {
   if (!draft) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-5 py-12 text-center text-sm text-slate-500">
@@ -26,6 +28,20 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
   }
 
   const canEdit = !!onChange;
+
+  const [isServicePickerOpen, setIsServicePickerOpen] = useState(false);
+  const [serviceQuery, setServiceQuery] = useState("");
+  const [customServiceTitle, setCustomServiceTitle] = useState("");
+  const [isChallanEditing, setIsChallanEditing] = useState(false);
+
+  const filteredServices = useMemo(() => {
+    const q = serviceQuery.trim().toLowerCase();
+    if (!q) return serviceCatalog;
+    return serviceCatalog.filter((s) => {
+      const hay = `${s.name} ${s.category ?? ""} ${(s.tags ?? []).join(" ")}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [serviceCatalog, serviceQuery]);
 
   /* ── Line item helpers ── */
   function updateLineItem(id: string, field: keyof QuotationLineItem, raw: string) {
@@ -55,16 +71,60 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
 
   function addLineItem() {
     if (!onChange || !draft) return;
+    setServiceQuery("");
+    setCustomServiceTitle("");
+    setIsServicePickerOpen(true);
+  }
+
+  function addCustomLineItem() {
+    if (!onChange || !draft) return;
+    const title = customServiceTitle.trim();
+    if (!title) return;
+
     const newItem: QuotationLineItem = {
       id: `manual-${Date.now()}`,
-      title: "New service",
+      title,
       quantity: 1,
       unitPrice: 0,
-      amount: 0,
+      amount: 0
     };
     const items = [...draft.lineItems, newItem];
     onChange({ lineItems: items, ...recalcTotals(items, draft.taxPercent) });
+    setIsServicePickerOpen(false);
   }
+
+  function addCatalogLineItem(service: ServiceCatalogItem) {
+    if (!onChange || !draft) return;
+    const newItem: QuotationLineItem = {
+      id: `svc-${service.id}-${Date.now()}`,
+      serviceCatalogItemId: service.id,
+      title: service.name,
+      quantity: 1,
+      unitPrice: service.unitPrice ?? 0,
+      amount: service.unitPrice ?? 0
+    };
+    const items = [...draft.lineItems, newItem];
+    onChange({ lineItems: items, ...recalcTotals(items, draft.taxPercent) });
+    setIsServicePickerOpen(false);
+  }
+
+  function toggleChallanEditing() {
+    if (!canEdit) return;
+    setIsChallanEditing((prev) => !prev);
+  }
+
+  function updateChallanNumber(value: string) {
+    if (!onChange || !draft) return;
+    onChange({ challanNumber: value });
+  }
+
+  function updateChallanAmount(raw: string) {
+    if (!onChange || !draft) return;
+    const amt = Math.max(0, Number(raw) || 0);
+    onChange({ challanAmount: amt });
+  }
+
+  const grandTotal = (draft.total ?? 0) + (draft.challanAmount ?? 0);
 
   function updateTaxPercent(raw: string) {
     if (!onChange || !draft) return;
@@ -238,7 +298,57 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
             <span>Total</span>
             <span>{formatCurrency(draft.total)}</span>
           </div>
+          {(draft.challanAmount ?? 0) > 0 ? (
+            <div className="flex items-center justify-between text-sm text-white/70">
+              <span>Challan</span>
+              <span>{formatCurrency(draft.challanAmount ?? 0)}</span>
+            </div>
+          ) : null}
+          <div className="border-t border-white/20 pt-3 flex items-center justify-between font-bold text-base">
+            <span>Grand Total</span>
+            <span>{formatCurrency(grandTotal)}</span>
+          </div>
         </div>
+      </div>
+
+      {/* Challan */}
+      <div className="border-t border-slate-100 p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Challan</p>
+          {canEdit ? (
+            <button
+              onClick={toggleChallanEditing}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
+            >
+              <Pencil className="h-3 w-3" />
+              {isChallanEditing ? "Done" : "Add / Edit"}
+            </button>
+          ) : null}
+        </div>
+
+        {canEdit && isChallanEditing ? (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <input
+              value={draft.challanNumber ?? ""}
+              onChange={(e) => updateChallanNumber(e.target.value)}
+              placeholder="Challan number"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+            />
+            <input
+              type="number"
+              min={0}
+              value={draft.challanAmount ?? 0}
+              onChange={(e) => updateChallanAmount(e.target.value)}
+              placeholder="Challan amount"
+              className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+            />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-slate-600">
+            {draft.challanNumber ? `Challan ${draft.challanNumber}` : "No challan added."}
+            {draft.challanAmount ? ` • ${formatCurrency(draft.challanAmount)}` : ""}
+          </p>
+        )}
       </div>
 
       {/* Terms & Conditions */}
@@ -280,6 +390,72 @@ export function GeneratedQuotationPreview({ draft, onChange }: GeneratedQuotatio
           ))}
         </div>
       </div>
+
+      {canEdit && isServicePickerOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+            <div className="border-b border-slate-100 p-4">
+              <p className="text-sm font-semibold text-slate-900">Add line item</p>
+              <p className="mt-1 text-xs text-slate-500">Search your Services catalog or type a custom item.</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <input
+                  value={serviceQuery}
+                  onChange={(e) => setServiceQuery(e.target.value)}
+                  placeholder="Search services..."
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                />
+                <div className="flex gap-2">
+                  <input
+                    value={customServiceTitle}
+                    onChange={(e) => setCustomServiceTitle(e.target.value)}
+                    placeholder="Custom line item title"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm outline-none"
+                  />
+                  <button
+                    onClick={addCustomLineItem}
+                    className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="max-h-[360px] overflow-auto p-2">
+              {filteredServices.length === 0 ? (
+                <div className="p-6 text-center text-sm text-slate-500">No matching services.</div>
+              ) : (
+                <div className="space-y-1">
+                  {filteredServices.map((svc) => (
+                    <button
+                      key={svc.id}
+                      onClick={() => addCatalogLineItem(svc)}
+                      className="w-full rounded-xl border border-transparent px-4 py-3 text-left hover:border-slate-200 hover:bg-slate-50"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-slate-900 truncate">{svc.name}</p>
+                          <p className="mt-0.5 text-xs text-slate-500 truncate">{svc.category}</p>
+                        </div>
+                        <div className="text-sm font-semibold text-slate-700 shrink-0">{formatCurrency(svc.unitPrice)}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-slate-100 p-3 flex justify-end gap-2">
+              <button
+                onClick={() => setIsServicePickerOpen(false)}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

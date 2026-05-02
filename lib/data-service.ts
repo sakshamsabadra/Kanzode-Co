@@ -101,12 +101,13 @@ export async function createQuotation(data: any) {
   // Generate numbers
   const count = await Quotation.countDocuments();
   const qNumber = `QT-2026-${String(count + 1001)}`;
-  const challanNumber = `CH-2026-${String(count + (await Invoice.countDocuments()) + 1001)}`;
+  const generatedChallanNumber = `CH-2026-${String(count + (await Invoice.countDocuments()) + 1001)}`;
 
   const quotation = await Quotation.create({
     ...data,
     quotationNumber: qNumber,
-    challanNumber: challanNumber,
+    challanNumber: data.challanNumber || generatedChallanNumber,
+    challanAmount: data.challanAmount ?? 0,
   });
 
   await appendActivity(

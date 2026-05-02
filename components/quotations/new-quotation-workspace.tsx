@@ -13,7 +13,7 @@ import {
   MockQuotationDraft,
   generateMockQuotationDraft
 } from "@/lib/quotation-generator";
-import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction, analyzeRequestAction } from "@/app/actions";
+import { saveQuotationDraft, sendSavedQuotation, convertSavedQuotationToInvoice, createClientAction } from "@/app/actions";
 import { toast } from "react-hot-toast";
 
 const sampleRequest =
@@ -118,54 +118,38 @@ export function NewQuotationWorkspace({
     }
   }
 
-  async function handleGenerate() {
+  useEffect(() => {
     if (!selectedClient) return;
-    setIsProcessing(true);
-    toast.loading("AI is analyzing request...", { id: "analyze" });
-    try {
-      const result = await analyzeRequestAction(requestText, selectedClient.id);
 
-      if (result.success) {
-        setDraft(result.data);
-        // Update the raw intent text with the professional AI enhancement
-        if (result.data.enhancedText) {
-          setRequestText(result.data.enhancedText);
-        }
-        toast.success("Analysis complete!", { id: "analyze" });
-        setStatusMessage(`AI-powered quotation draft prepared for ${selectedClient.companyName}.`);
-      } else {
-        // AI returned a structured error – use local fallback
-        console.warn("AI analysis returned error:", result.error);
+    setIsProcessing(true);
+    const timer = setTimeout(() => {
+      try {
         const nextDraft = generateMockQuotationDraft({
           client: selectedClient,
           sourceText: requestText,
           serviceCatalog: mappedServices,
-          suggestedPackages: mappedPackages
+          suggestedPackages: mappedPackages,
+          quotationType: draft?.quotationType ?? "manual"
         });
-        setDraft(nextDraft);
-        toast.error(result.error || "AI analysis failed. Used local fallback.", { id: "analyze" });
-        setStatusMessage(`Local quotation draft prepared for ${selectedClient.companyName}.`);
-      }
-    } catch (e: any) {
-      // Network / unexpected errors
-      console.error(e);
-      const nextDraft = generateMockQuotationDraft({
-        client: selectedClient,
-        sourceText: requestText,
-        serviceCatalog: mappedServices,
-        suggestedPackages: mappedPackages
-      });
-      setDraft(nextDraft);
-      toast.error("AI analysis failed. Used local fallback.", { id: "analyze" });
-      setStatusMessage(`Local quotation draft prepared for ${selectedClient.companyName}.`);
-    } finally {
-      setIsProcessing(false);
-    }
-  }
 
-  function handleRegenerate() {
-    handleGenerate();
-  }
+        setDraft((prev) => {
+          if (!prev) return nextDraft;
+          return {
+            ...nextDraft,
+            challanNumber: prev.challanNumber,
+            challanAmount: prev.challanAmount
+          };
+        });
+
+        setStatusMessage(`Quotation draft prepared for ${selectedClient.companyName}.`);
+      } finally {
+        setIsProcessing(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedClientId, requestText]);
 
   async function handleSaveDraft() {
     if (!draft || !selectedClient) return;
@@ -344,11 +328,6 @@ export function NewQuotationWorkspace({
                   placeholder='Client needs private limited incorporation, GST registration, and founders agreement...'
                 />
               </div>
-
-              <ActionTrigger onClick={handleGenerate} disabled={isProcessing} className="w-full py-4 text-base">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Analyze & Generate Draft
-              </ActionTrigger>
             </div>
           </Panel>
 
@@ -370,7 +349,7 @@ export function NewQuotationWorkspace({
 
               <div className="space-y-2">
                 <span className="text-xs font-bold uppercase tracking-widest text-slate-400">2. Commercial Structure</span>
-                <GeneratedQuotationPreview draft={draft} onChange={patchDraft} />
+                <GeneratedQuotationPreview draft={draft} onChange={patchDraft} serviceCatalog={mappedServices} />
               </div>
             </div>
           </Panel>
@@ -389,9 +368,6 @@ export function NewQuotationWorkspace({
               </ActionTrigger>
               <ActionTrigger variant="ghost" onClick={handleConvert} disabled={isProcessing || !draft}>
                 Convert to Invoice
-              </ActionTrigger>
-              <ActionTrigger variant="ghost" onClick={handleRegenerate} disabled={isProcessing || !draft} className="ml-auto">
-                Reset Analysis
               </ActionTrigger>
             </div>
           </Panel>
