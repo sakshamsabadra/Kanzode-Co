@@ -134,7 +134,7 @@ export default function ClientsContent({
             <input
               value={newClient.whatsappNumber}
               onChange={(e) => setNewClient((c) => ({ ...c, whatsappNumber: e.target.value }))}
-              placeholder="WhatsApp number"
+              placeholder="WhatsApp number *"
               className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400"
             />
             <input
